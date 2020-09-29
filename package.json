@@ -28,7 +28,8 @@
   },
   "homepage": "https://github.com/TheDudeFromCI/mineflayer-collectblock#readme",
   "dependencies": {
-    "mineflayer": "^2.29.0"
+    "mineflayer": "^2.29.0",
+    "prismarine-block": "^1.7.1"
   },
   "devDependencies": {
     "@types/node": "14.11.2",

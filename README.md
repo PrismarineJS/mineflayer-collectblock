@@ -34,7 +34,7 @@ const bot = mineflayer.createBot({ username: "Player" })
 bot.loadPlugin(require('mineflayer-pathfinder').pathfinder)
 
 // Load collect block
-bot.loadPlugin(require('mineflayer-collectblock'))
+bot.loadPlugin(require('mineflayer-collectblock').plugin)
 
 function collectGrass() {
   // Find a nearby grass block
