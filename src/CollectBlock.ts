@@ -2,6 +2,7 @@ import { Bot } from "mineflayer";
 import { Block } from "prismarine-block";
 import { Movements, goals, Result } from "mineflayer-pathfinder";
 import { TemporarySubscriber } from "mineflayer-utils";
+import { Entity } from "prismarine-entity";
 
 /**
  * Creates a new error object with the given type and message.
@@ -92,8 +93,93 @@ export class CollectBlock
     private mineBlock(block: Block, cb: (err?: Error) => void): void
     {
         this.selectBestTool(block, () => {
-            this.bot.dig(block, cb);
+            const tempEvents = new TemporarySubscriber(this.bot);
+
+            const itemDrops: Entity[] = [];
+            tempEvents.subscribeTo('itemDrop', (entity: Entity) => {
+                if (entity.position.distanceTo(block.position.offset(0.5, 0.5, 0.5)) <= 0.5)
+                    itemDrops.push(entity);
+            });
+
+            this.bot.dig(block, (err?: Error) => {
+                if (err)
+                {
+                    tempEvents.cleanup();
+                    cb(err);
+                    return;
+                }
+
+                let remainingTicks = 10;
+                tempEvents.subscribeTo('physicTick', () => {
+                    remainingTicks--;
+
+                    if (remainingTicks <= 0)
+                    {
+                        tempEvents.cleanup();
+                        this.collectItemDrops(itemDrops, cb);
+                    }
+                })
+            });
         });
+    }
+
+    private closestEntity(entities: Entity[]): Entity | undefined
+    {
+        let e = undefined;
+        let distance = 0;
+
+        for (const entity of entities)
+        {
+            const dist = entity.position.distanceTo(this.bot.entity.position);
+            if (!entity || dist < distance)
+            {
+                e = entity;
+                distance = dist;
+            }
+        }
+
+        return e;
+    }
+
+    private collectItemDrops(itemDrops: Entity[], cb: (err?: Error) => void): void
+    {
+        if (itemDrops.length === 0)
+        {
+            cb();
+            return;
+        }
+
+        let targetEntity: Entity | undefined;
+        const collectNext = () => {
+            targetEntity = this.closestEntity(itemDrops);
+            
+            // @ts-ignore
+            const pathfinder = this.bot.pathfinder;
+            pathfinder.setGoal(new goals.GoalFollow(targetEntity, 0), true);
+        }
+
+        const tempEvents = new TemporarySubscriber(this.bot);
+        tempEvents.subscribeTo('entityGone', (entity: Entity) => {
+            const index = itemDrops.indexOf(entity);
+            if (index >= 0)
+               itemDrops.splice(index, 1);
+
+            if (itemDrops.length === 0)
+            {
+                // @ts-ignore
+                this.bot.pathfinder.setGoal(null);
+
+                tempEvents.cleanup();
+                cb();
+
+                return;
+            }
+
+            if (entity === targetEntity)
+                collectNext();
+        });
+
+        collectNext();
     }
 
     private selectBestTool(block: Block, cb: () => void): void
