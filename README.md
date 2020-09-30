@@ -12,6 +12,11 @@
 
 ---
 
+## Showcase
+
+You can see a video of the plugin in action, [here.](https://youtu.be/5T_rcCnNnf4)
+The source code of the bot in the video can be seen in the examples folder, [here.](https://github.com/TheDudeFromCI/mineflayer-collectblock/blob/master/examples/collector.js)
+
 ### Getting Started
 
 This plugin is built using Node and can be installed using:
