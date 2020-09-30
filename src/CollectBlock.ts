@@ -56,7 +56,7 @@ export class CollectBlock
             return;
 
         if (!cb)
-            cb = () => {}
+            cb = () => { }
 
         // @ts-ignore
         const pathfinder = this.bot.pathfinder;
@@ -66,7 +66,7 @@ export class CollectBlock
             cb(err('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!'));
             return;
         }
-            
+
         if (!this.movements)
         {
             const mcData = require('minecraft-data')(this.bot.version);
@@ -79,12 +79,14 @@ export class CollectBlock
 
         const tempEvents = new TemporarySubscriber(this.bot);
 
-        tempEvents.subscribeTo('goal_reached', () => {
+        tempEvents.subscribeTo('goal_reached', () =>
+        {
             tempEvents.cleanup();
             this.mineBlock(block, cb);
         });
 
-        tempEvents.subscribeTo('path_update', (results: Result) => {
+        tempEvents.subscribeTo('path_update', (results: Result) =>
+        {
             if (results.status === 'noPath')
             {
                 tempEvents.cleanup();
@@ -95,16 +97,19 @@ export class CollectBlock
 
     private mineBlock(block: Block, cb: (err?: Error) => void): void
     {
-        this.selectBestTool(block, () => {
+        this.selectBestTool(block, () =>
+        {
             const tempEvents = new TemporarySubscriber(this.bot);
 
             const itemDrops: Entity[] = [];
-            tempEvents.subscribeTo('itemDrop', (entity: Entity) => {
+            tempEvents.subscribeTo('itemDrop', (entity: Entity) =>
+            {
                 if (entity.position.distanceTo(block.position.offset(0.5, 0.5, 0.5)) <= 0.5)
                     itemDrops.push(entity);
             });
 
-            this.bot.dig(block, (err?: Error) => {
+            this.bot.dig(block, (err?: Error) =>
+            {
                 if (err)
                 {
                     tempEvents.cleanup();
@@ -113,7 +118,8 @@ export class CollectBlock
                 }
 
                 let remainingTicks = 10;
-                tempEvents.subscribeTo('physicTick', () => {
+                tempEvents.subscribeTo('physicTick', () =>
+                {
                     remainingTicks--;
 
                     if (remainingTicks <= 0)
@@ -134,7 +140,7 @@ export class CollectBlock
         for (const entity of entities)
         {
             const dist = entity.position.distanceTo(this.bot.entity.position);
-            if (!entity || dist < distance)
+            if (!e || dist < distance)
             {
                 e = entity;
                 distance = dist;
@@ -153,19 +159,21 @@ export class CollectBlock
         }
 
         let targetEntity: Entity | undefined;
-        const collectNext = () => {
+        const collectNext = () =>
+        {
             targetEntity = this.closestEntity(itemDrops);
-            
+
             // @ts-ignore
             const pathfinder = this.bot.pathfinder;
             pathfinder.setGoal(new goals.GoalFollow(targetEntity, 0), true);
         }
 
         const tempEvents = new TemporarySubscriber(this.bot);
-        tempEvents.subscribeTo('entityGone', (entity: Entity) => {
+        tempEvents.subscribeTo('entityGone', (entity: Entity) =>
+        {
             const index = itemDrops.indexOf(entity);
             if (index >= 0)
-               itemDrops.splice(index, 1);
+                itemDrops.splice(index, 1);
 
             if (itemDrops.length === 0)
             {
