@@ -55,6 +55,9 @@ export class CollectBlock
         if (!block)
             return;
 
+        if (!cb)
+            cb = () => {}
+
         // @ts-ignore
         const pathfinder = this.bot.pathfinder;
 
