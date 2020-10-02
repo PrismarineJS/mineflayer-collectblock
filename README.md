@@ -3,7 +3,7 @@
 
 <p align="center">
   <img src="https://github.com/TheDudeFromCI/mineflayer-collectblock/workflows/Build/badge.svg" />
-  <img src="https://img.shields.io/npm/v/mineflayer-collectblock" />
+  <a href="https://www.npmjs.com/package/mineflayer-collectblock"><img src="https://img.shields.io/npm/v/mineflayer-collectblock" /></a>
   <img src="https://img.shields.io/github/repo-size/TheDudeFromCI/mineflayer-collectblock" />
   <img src="https://img.shields.io/npm/dm/mineflayer-collectblock" />
   <img src="https://img.shields.io/github/contributors/TheDudeFromCI/mineflayer-collectblock" />
