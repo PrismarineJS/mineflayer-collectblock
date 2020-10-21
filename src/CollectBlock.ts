@@ -87,6 +87,11 @@ export class CollectBlock
             this.mineBlock(block, cb);
         });
 
+        tempEvents.subscribeTo('goal_updated', () => {
+            tempEvents.cleanup();
+            cb(err('PathfindingInterrupted', 'Pathfinding interrupted before block reached.'));
+        })
+
         tempEvents.subscribeTo('path_update', (results: Result) =>
         {
             if (results.status === 'noPath')
@@ -161,16 +166,20 @@ export class CollectBlock
         }
 
         let targetEntity: Entity | undefined;
+        let goal: goals.GoalFollow | null = null;
+
         const collectNext = () =>
         {
             targetEntity = this.closestEntity(itemDrops);
+            goal = new goals.GoalFollow(targetEntity, 0);
 
             // @ts-ignore
             const pathfinder = this.bot.pathfinder;
-            pathfinder.setGoal(new goals.GoalFollow(targetEntity, 0), true);
+            pathfinder.setGoal(goal, true);
         }
 
         const tempEvents = new TemporarySubscriber(this.bot);
+
         tempEvents.subscribeTo('entityGone', (entity: Entity) =>
         {
             const index = itemDrops.indexOf(entity);
@@ -179,18 +188,25 @@ export class CollectBlock
 
             if (itemDrops.length === 0)
             {
+                tempEvents.cleanup();
+                goal = null;
+
                 // @ts-ignore
                 this.bot.pathfinder.setGoal(null);
 
-                tempEvents.cleanup();
                 cb();
-
                 return;
             }
 
             if (entity === targetEntity)
                 collectNext();
         });
+
+        tempEvents.subscribeTo('goal_updated', (newGoal: goals.Goal | null) => {
+            if (newGoal === goal) return;
+            tempEvents.cleanup();
+            cb(err('PathfindingInterrupted', 'Pathfinding interrupted before item could be reached.'));
+        })
 
         collectNext();
     }
