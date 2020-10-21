@@ -24,26 +24,39 @@ bot.on('chat', (username, message) => {
   const args = message.split(" ")
   if (args[0] !== 'collect') return
 
-  const blockType = mcData.blocksByName[args[1]]
+  let count = 1
+  if (args.length === 3) count = parseInt(args[1])
+
+  let type = args[1];
+  if (args.length === 3) type = args[2]
+
+  const blockType = mcData.blocksByName[type]
   if (!blockType) {
-    bot.chat("I don't know any blocks with that name.")
+    bot.chat(`"I don't know any blocks named ${type}.`)
     return
   }
 
-  bot.chat("Collecting the nearest " + blockType.name)
-
-  const block = bot.findBlock({
+  const blocks = bot.findBlocks({
     matching: blockType.id,
     maxDistance: 64,
+    count: count
   })
 
-  if (!block) {
+  if (blocks.length === 0) {
     bot.chat("I don't see that block nearby.")
     return
   }
 
-  bot.collectBlock.collect(block, err => {
+  const targets = []
+  for (let i = 0; i < Math.min(blocks.length, count); i++)
+    targets.push(bot.blockAt(blocks[i]))
+
+  bot.chat(`Found ${targets.length} ${type}(s)`)
+
+  bot.collectBlock.collect(targets, err => {
     if (err)
       bot.chat(err.message)
+    else
+      bot.chat('Done')
   })
 })
