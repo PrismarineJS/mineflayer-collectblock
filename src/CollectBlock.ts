@@ -228,10 +228,8 @@ export class CollectBlock
      * If target is an item drop:
      * Causes the bot to collect the item drop.
      * 
-     * If target is an array of items or blocks, preforms the correct action for all
-     * targets in that array.
-     * 
-     * If target is an array, all objects in the array much be of the same type.
+     * If target is an array containing items or blocks, preforms the correct action for
+     * all targets in that array sorting dynamically by distance.
      * 
      * @param target - The block(s) or item(s) to collect.
      * @param cb - The callback that is called finished.
