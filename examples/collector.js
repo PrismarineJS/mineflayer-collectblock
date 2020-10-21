@@ -1,5 +1,4 @@
 const mineflayer = require('mineflayer')
-const pathfinder = require('mineflayer-pathfinder').pathfinder
 const collectBlock = require('mineflayer-collectblock').plugin
 
 if (process.argv.length < 4 || process.argv.length > 6) {
@@ -14,7 +13,6 @@ const bot = mineflayer.createBot({
   password: process.argv[5]
 })
 
-bot.loadPlugin(pathfinder)
 bot.loadPlugin(collectBlock)
 
 let mcData;

@@ -24,8 +24,6 @@ This plugin is built using Node and can be installed using:
 npm install --save mineflayer-collectblock
 ```
 
-This plugin has a relies on [mineflayer-pathfinder](https://github.com/Karang/mineflayer-pathfinder) for pathfinding. That plugin should be loaded first.
-
 ### Simple Bot
 
 The brief description goes here.
@@ -34,9 +32,6 @@ The brief description goes here.
 // Create your bot
 const mineflayer = require("mineflayer")
 const bot = mineflayer.createBot({ username: "Player" })
-
-// Load pathfinder
-bot.loadPlugin(require('mineflayer-pathfinder').pathfinder)
 
 // Load collect block
 bot.loadPlugin(require('mineflayer-collectblock').plugin)
