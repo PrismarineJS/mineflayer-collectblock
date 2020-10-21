@@ -1,8 +1,10 @@
-import { Bot } from "mineflayer";
-import { Block } from "prismarine-block";
-import { Movements, goals, Result } from "mineflayer-pathfinder";
-import { TemporarySubscriber } from "mineflayer-utils";
-import { Entity } from "prismarine-entity";
+import { Bot } from 'mineflayer';
+import { Block } from 'prismarine-block';
+import { Movements, goals, Result } from 'mineflayer-pathfinder';
+import { TemporarySubscriber } from 'mineflayer-utils';
+import { Entity } from 'prismarine-entity';
+
+type Callback = (err?: Error) => void;
 
 /**
  * Creates a new error object with the given type and message.
@@ -50,7 +52,7 @@ export class CollectBlock
      * @param block - The block to break and attempt to collect.
      * @param cb - The callback that is called finished.
      */
-    collect(block: Block, cb: (err?: Error) => void): void
+    collect(block: Block, cb: Callback): void
     {
         if (!block)
             return;
@@ -95,7 +97,7 @@ export class CollectBlock
         });
     }
 
-    private mineBlock(block: Block, cb: (err?: Error) => void): void
+    private mineBlock(block: Block, cb: Callback): void
     {
         this.selectBestTool(block, () =>
         {
@@ -125,7 +127,7 @@ export class CollectBlock
                     if (remainingTicks <= 0)
                     {
                         tempEvents.cleanup();
-                        this.collectItemDrops(itemDrops, cb);
+                        this.collectItems(itemDrops, cb);
                     }
                 })
             });
@@ -150,7 +152,7 @@ export class CollectBlock
         return e;
     }
 
-    private collectItemDrops(itemDrops: Entity[], cb: (err?: Error) => void): void
+    collectItems(itemDrops: Entity[], cb: Callback): void
     {
         if (itemDrops.length === 0)
         {
