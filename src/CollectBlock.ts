@@ -50,9 +50,9 @@ function collectAll(bot: Bot, targets: Collectable[], cb: Callback): void
             return;
         }
 
-        if (closest.constructor.name === Block.name)
+        if (closest.constructor.name === 'Block')
             collectBlock(bot, <Block>closest, targets, collectNext);
-        else if (closest.constructor.name === Entity.name)
+        else if (closest.constructor.name === 'Entity')
             collectItem(bot, <Entity>closest, collectNext);
         else
             cb(err('UnknownType', `Target ${closest.name} is not a Block or Entity!`));
@@ -89,7 +89,7 @@ function collectBlock(bot: Bot, block: Block, targets: Collectable[], cb: Callba
         cb = () => { }
 
     // @ts-ignore
-    const pathfinder = this.bot.pathfinder;
+    const pathfinder = bot.pathfinder;
 
     const goal = new goals.GoalGetToBlock(block.position.x, block.position.y, block.position.z);
     pathfinder.setGoal(goal);
@@ -160,7 +160,7 @@ function mineBlock(bot: Bot, block: Block, targets: Collectable[], cb: Callback)
 function selectBestTool(bot: Bot, block: Block, cb: () => void): void
 {
     // @ts-ignore
-    const pathfinder = this.bot.pathfinder;
+    const pathfinder = bot.pathfinder;
     const tool = pathfinder.bestHarvestTool(block);
 
     if (tool)
