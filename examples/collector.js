@@ -1,3 +1,8 @@
+/**
+ * This bot example show how to direct a bot to collect a specific block type
+ * or a group of nearby blocks of that type. 
+ */
+
 const mineflayer = require('mineflayer')
 const collectBlock = require('mineflayer-collectblock').plugin
 
@@ -54,9 +59,13 @@ bot.on('chat', (username, message) => {
   bot.chat(`Found ${targets.length} ${type}(s)`)
 
   bot.collectBlock.collect(targets, err => {
-    if (err)
+    if (err) {
+      // An error occurred, report it.
       bot.chat(err.message)
-    else
+      console.log(err)
+    } else {
+      // All blocks have been collected.
       bot.chat('Done')
+    }
   })
 })

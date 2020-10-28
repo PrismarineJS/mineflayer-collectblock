@@ -3,64 +3,20 @@ import { Block } from 'prismarine-block';
 import { Movements, goals, Result } from 'mineflayer-pathfinder';
 import { TemporarySubscriber } from 'mineflayer-utils';
 import { Entity } from 'prismarine-entity';
+import { error } from './Util';
+import { Vec3 } from 'vec3';
+import { emptyInventoryIfFull, ItemFilter } from './Inventory';
+import { Item } from 'prismarine-item';
 
-type Callback = (err?: Error) => void;
-type Collectable = Block | Entity;
+export type Callback = (err?: Error) => void;
+export type Collectable = Block | Entity;
 
 /**
- * Creates a new error object with the given type and message.
+ * Gets the closest position holder from a list.
  * 
- * @param type - The error type.
- * @param message - The error message.
- * 
- * @returns The error object.
+ * @param bot - The bot to get the position from.
+ * @param targets - The list of position holders to sample from.
  */
-function err(type: string, message: string): Error
-{
-    const e = new Error(message);
-    e.name = type;
-    return e;
-}
-
-function collectAll(bot: Bot, targets: Collectable[], cb: Callback): void
-{
-    const tempEvents = new TemporarySubscriber(bot);
-
-    tempEvents.subscribeTo('entityGone', (entity: Entity) =>
-    {
-        const index = targets.indexOf(entity);
-        if (index >= 0)
-            targets.splice(index, 1);
-    });
-
-    const collectNext = (error?: Error) => {
-        if (error)
-        {
-            tempEvents.cleanup();
-            cb(error);
-            return;
-        }
-
-        const closest = getClosest(bot, targets);
-
-        if (!closest)
-        {
-            tempEvents.cleanup();
-            cb();
-            return;
-        }
-
-        if (closest.constructor.name === 'Block')
-            collectBlock(bot, <Block>closest, targets, collectNext);
-        else if (closest.constructor.name === 'Entity')
-            collectItem(bot, <Entity>closest, collectNext);
-        else
-            cb(err('UnknownType', `Target ${closest.name} is not a Block or Entity!`));
-    }
-
-    collectNext();
-}
-
 function getClosest(bot: Bot, targets: Collectable[]): Collectable | null
 {
     let closest: Collectable | null = null;
@@ -78,6 +34,62 @@ function getClosest(bot: Bot, targets: Collectable[]): Collectable | null
     }
 
     return closest;
+}
+
+function collectAll(bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, targets: Collectable[], cb: Callback): void
+{
+    const tempEvents = new TemporarySubscriber(bot);
+
+    tempEvents.subscribeTo('entityGone', (entity: Entity) =>
+    {
+        const index = targets.indexOf(entity);
+        if (index >= 0)
+            targets.splice(index, 1);
+    });
+
+    const collectNext = (err?: Error) => {
+        if (err)
+        {
+            tempEvents.cleanup();
+            cb(err);
+            return;
+        }
+
+        if (targets.length > 0)
+        {
+            emptyInventoryIfFull(bot, chestLocations, itemFilter, (err?: Error) => {
+                if (err)
+                {
+                    tempEvents.cleanup();
+                    cb(err);
+                    return;
+                }
+
+                const closest = getClosest(bot, targets);
+
+                if (!closest)
+                {
+                    tempEvents.cleanup();
+                    cb();
+                    return;
+                }
+
+                if (closest.constructor.name === 'Block')
+                    collectBlock(bot, <Block>closest, targets, collectNext);
+                else if (closest.constructor.name === 'Entity')
+                    collectItem(bot, <Entity>closest, collectNext);
+                else
+                    cb(error('UnknownType', `Target ${closest.name} is not a Block or Entity!`));
+            })
+        }
+        else
+        {
+            cb();
+            return;
+        }
+    }
+
+    collectNext();
 }
 
 function collectBlock(bot: Bot, block: Block, targets: Collectable[], cb: Callback): void
@@ -104,7 +116,7 @@ function collectBlock(bot: Bot, block: Block, targets: Collectable[], cb: Callba
 
     tempEvents.subscribeTo('goal_updated', () => {
         tempEvents.cleanup();
-        cb(err('PathfindingInterrupted', 'Pathfinding interrupted before block reached.'));
+        cb(error('PathfindingInterrupted', 'Pathfinding interrupted before block reached.'));
     })
 
     tempEvents.subscribeTo('path_update', (results: Result) =>
@@ -112,7 +124,7 @@ function collectBlock(bot: Bot, block: Block, targets: Collectable[], cb: Callba
         if (results.status === 'noPath')
         {
             tempEvents.cleanup();
-            cb(err('NoPath', 'No path to target block!'));
+            cb(error('NoPath', 'No path to target block!'));
         }
     });
 }
@@ -191,8 +203,8 @@ function collectItem(bot: Bot, targetEntity: Entity, cb: Callback): void
     tempEvents.subscribeTo('goal_updated', (newGoal: goals.Goal | null) => {
         if (newGoal === goal) return;
         tempEvents.cleanup();
-        cb(err('PathfindingInterrupted', 'Pathfinding interrupted before item could be reached.'));
-    })
+        cb(error('PathfindingInterrupted', 'Pathfinding interrupted before item could be reached.'));
+    });
 }
 
 /**
@@ -209,6 +221,35 @@ export class CollectBlock
      * The movements configuration to be sent to the pathfinder plugin.
      */
     movements?: Movements;
+
+    /**
+     * A list of chest locations which the bot is allowed to empty their inventory into
+     * if it becomes full while the bot is collecting resources.
+     */
+    chestLocations: Vec3[] = [];
+
+    /**
+     * When collecting items, this filter is used to determine what items should be placed
+     * into a chest if the bot's inventory becomes full. By default, returns true for all
+     * items except for tools, weapons, and armor.
+     * 
+     * @param item - The item stack in the bot's inventory to check.
+     * 
+     * @returns True if the item should be moved into the chest. False otherwise.
+     */
+    itemFilter: ItemFilter = (item: Item) => {
+        if (item.name.includes('helmet')) return false;
+        if (item.name.includes('chestplate')) return false;
+        if (item.name.includes('leggings')) return false;
+        if (item.name.includes('boots')) return false;
+        if (item.name.includes('shield')) return false;
+        if (item.name.includes('sword')) return false;
+        if (item.name.includes('pickaxe')) return false;
+        if (item.name.includes('axe')) return false;
+        if (item.name.includes('shovel')) return false;
+        if (item.name.includes('hoe')) return false;
+        return true;
+    };
 
     /**
      * Creates a new instance of the create block plugin.
@@ -243,7 +284,7 @@ export class CollectBlock
         // @ts-ignore
         if (!this.bot.pathfinder)
         {
-            cb(err('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!'));
+            cb(error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!'));
             return;
         }
     
@@ -251,6 +292,6 @@ export class CollectBlock
             // @ts-ignore
             this.bot.pathfinder.setMovements(this.movements);
 
-        collectAll(this.bot, targetArray, cb);
+        collectAll(this.bot, this.chestLocations, this.itemFilter, targetArray, cb);
     }
 }
