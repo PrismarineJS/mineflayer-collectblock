@@ -6,6 +6,7 @@ import { Entity } from 'prismarine-entity'
 import { error } from './Util'
 import { Vec3 } from 'vec3'
 import { emptyInventoryIfFull, ItemFilter } from './Inventory'
+import { findFromVein } from './BlockVeins'
 import { Item } from 'prismarine-item'
 import mcDataLoader from 'minecraft-data'
 
@@ -112,6 +113,13 @@ function collectBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callb
 
 function mineBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback): void {
   selectBestTool(bot, block, () => {
+    // Do nothing if the block is already air
+    // Sometimes happens if the block is broken before the bot reaches it
+    if (block.type === 0) {
+      cb()
+      return
+    }
+
     const tempEvents = new TemporarySubscriber(bot)
 
     tempEvents.subscribeTo('itemDrop', (entity: Entity) => {
@@ -270,5 +278,9 @@ export class CollectBlock {
     }
 
     collectAll(this.bot, this.chestLocations, this.itemFilter, targetArray, cb)
+  }
+
+  findFromVein (block: Block, maxBlocks = 100, maxDistance = 16, floodRadius = 1): Block[] {
+    return findFromVein(this.bot, block, maxBlocks, maxDistance, floodRadius)
   }
 }
