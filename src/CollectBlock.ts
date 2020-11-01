@@ -113,6 +113,13 @@ function collectBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callb
 
 function mineBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback): void {
   selectBestTool(bot, block, () => {
+    // Do nothing if the block is already air
+    // Sometimes happens if the block is broken before the bot reaches it
+    if (block.type === 0) {
+      cb()
+      return
+    }
+
     const tempEvents = new TemporarySubscriber(bot)
 
     tempEvents.subscribeTo('itemDrop', (entity: Entity) => {
