@@ -25,7 +25,7 @@ const bot = mineflayer.createBot({
 bot.loadPlugin(collectBlock)
 
 // Load mcData on login
-let mcData;
+let mcData
 bot.once('login', () => {
   mcData = require('minecraft-data')(bot.version)
 })
@@ -52,10 +52,9 @@ bot.once('spawn', () => {
 
 // Wait for someone to say something
 bot.on('chat', (username, message) => {
-
   // If the player says something start starts with "collect"
   // Otherwise, do nothing
-  const args = message.split(" ")
+  const args = message.split(' ')
   if (args[0] !== 'collect') return
 
   // If the player specifies a number, collect that many. Otherwise, default to 1.
@@ -63,7 +62,7 @@ bot.on('chat', (username, message) => {
   if (args.length === 3) count = parseInt(args[1])
 
   // If a number was given the item number is the 3rd arg, not the 2nd.
-  let type = args[1];
+  let type = args[1]
   if (args.length === 3) type = args[2]
 
   // Get the id of that block type for this version of Minecraft.
@@ -88,8 +87,9 @@ bot.on('chat', (username, message) => {
 
   // Convert the block position array into a block array to pass to collect block.
   const targets = []
-  for (let i = 0; i < Math.min(blocks.length, count); i++)
+  for (let i = 0; i < Math.min(blocks.length, count); i++) {
     targets.push(bot.blockAt(blocks[i]))
+  }
 
   // Announce what we found.
   bot.chat(`Found ${targets.length} ${type}(s)`)

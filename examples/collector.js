@@ -1,6 +1,6 @@
 /**
  * This bot example show how to direct a bot to collect a specific block type
- * or a group of nearby blocks of that type. 
+ * or a group of nearby blocks of that type.
  */
 
 const mineflayer = require('mineflayer')
@@ -20,19 +20,19 @@ const bot = mineflayer.createBot({
 
 bot.loadPlugin(collectBlock)
 
-let mcData;
+let mcData
 bot.once('spawn', () => {
   mcData = require('minecraft-data')(bot.version)
 })
 
 bot.on('chat', (username, message) => {
-  const args = message.split(" ")
+  const args = message.split(' ')
   if (args[0] !== 'collect') return
 
   let count = 1
   if (args.length === 3) count = parseInt(args[1])
 
-  let type = args[1];
+  let type = args[1]
   if (args.length === 3) type = args[2]
 
   const blockType = mcData.blocksByName[type]
@@ -53,8 +53,9 @@ bot.on('chat', (username, message) => {
   }
 
   const targets = []
-  for (let i = 0; i < Math.min(blocks.length, count); i++)
+  for (let i = 0; i < Math.min(blocks.length, count); i++) {
     targets.push(bot.blockAt(blocks[i]))
+  }
 
   bot.chat(`Found ${targets.length} ${type}(s)`)
 
