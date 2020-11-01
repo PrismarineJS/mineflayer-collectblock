@@ -6,6 +6,7 @@ import { Entity } from 'prismarine-entity'
 import { error } from './Util'
 import { Vec3 } from 'vec3'
 import { emptyInventoryIfFull, ItemFilter } from './Inventory'
+import { findFromVein } from './BlockVeins'
 import { Item } from 'prismarine-item'
 import mcDataLoader from 'minecraft-data'
 
@@ -270,5 +271,9 @@ export class CollectBlock {
     }
 
     collectAll(this.bot, this.chestLocations, this.itemFilter, targetArray, cb)
+  }
+
+  findFromVein(block: Block, maxBlocks = 100, maxDistance = 16, floodRadius = 1): Block[] {
+    return findFromVein(this.bot, block, maxBlocks, maxDistance, floodRadius)
   }
 }
