@@ -273,7 +273,7 @@ export class CollectBlock {
     collectAll(this.bot, this.chestLocations, this.itemFilter, targetArray, cb)
   }
 
-  findFromVein(block: Block, maxBlocks = 100, maxDistance = 16, floodRadius = 1): Block[] {
+  findFromVein (block: Block, maxBlocks = 100, maxDistance = 16, floodRadius = 1): Block[] {
     return findFromVein(this.bot, block, maxBlocks, maxDistance, floodRadius)
   }
 }
