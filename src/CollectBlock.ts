@@ -189,6 +189,17 @@ function collectItem (bot: Bot, targetEntity: Entity, cb: Callback): void {
 }
 
 /**
+ * A set of options to apply when collecting the given targets.
+ */
+export interface CollectOptions {
+  /**
+   * If true, the target(s) will be appended to the existing target list instead of
+   * starting a new task. Defaults to false.
+   */
+  append?: boolean
+}
+
+/**
  * The collect block plugin.
  */
 export class CollectBlock {
@@ -252,9 +263,15 @@ export class CollectBlock {
      * all targets in that array sorting dynamically by distance.
      *
      * @param target - The block(s) or item(s) to collect.
+     * @param options - The set of options to use when handling these targets
      * @param cb - The callback that is called finished.
      */
-  collect (target: Collectable | Collectable[], cb: Callback): void {
+  collect (target: Collectable | Collectable[], options: CollectOptions | Callback = {}, cb: Callback = () => {}): void {
+    if (typeof options === 'function') {
+      cb = options
+      options = {}
+    }
+
     let targetArray
     if (Array.isArray(target)) targetArray = target
     else targetArray = [target]
