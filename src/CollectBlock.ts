@@ -146,15 +146,15 @@ function mineBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback
 }
 
 function selectBestTool (bot: Bot, block: Block, cb: () => void): void {
-  // @ts-expect-error
-  const pathfinder = bot.pathfinder
-  const tool = pathfinder.bestHarvestTool(block)
-
-  if (tool != null) {
-    bot.equip(tool, 'hand', cb)
-  } else {
-    cb()
+  const options = {
+    requireHarvest: true,
+    getFromChest: true,
+    maxTools: 2
   }
+
+  // @ts-expect-error
+  const toolPlugin: Tool = bot.tool
+  toolPlugin.equipForBlock(block, options, cb)
 }
 
 function collectItem (bot: Bot, targetEntity: Entity, cb: Callback): void {
@@ -253,9 +253,15 @@ export class CollectBlock {
 
     // @ts-expect-error
     const pathfinder = this.bot.pathfinder
-
     if (pathfinder == null) {
       cb(error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!'))
+      return
+    }
+
+    // @ts-expect-error
+    const tool = this.bot.tool
+    if (tool == null) {
+      cb(error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-tool plugin to run!'))
       return
     }
 

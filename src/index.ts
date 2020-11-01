@@ -1,18 +1,25 @@
 import { Bot } from 'mineflayer'
 import { CollectBlock } from './CollectBlock'
-import { pathfinder } from 'mineflayer-pathfinder'
+import { pathfinder as pathfinderPlugin } from 'mineflayer-pathfinder'
+import { plugin as toolPlugin } from 'mineflayer-tool'
 
 export function plugin (bot: Bot): void {
   // @ts-expect-error
   bot.collectBlock = new CollectBlock(bot)
 
-  // Load pathfinder if not loaded manually.
-  setTimeout(() => loadPathfinder(bot), 0)
+  // Load plugins if not loaded manually.
+  setTimeout(() => loadPathfinderPlugin(bot), 0)
+  setTimeout(() => loadToolPlugin(bot), 0)
 }
 
-function loadPathfinder (bot: Bot): void {
+function loadPathfinderPlugin (bot: Bot): void {
   // @ts-expect-error
   if (bot.pathfinder != null) return
+  bot.loadPlugin(pathfinderPlugin)
+}
 
-  bot.loadPlugin(pathfinder)
+function loadToolPlugin (bot: Bot): void {
+  // @ts-expect-error
+  if (bot.tool != null) return
+  bot.loadPlugin(toolPlugin)
 }
