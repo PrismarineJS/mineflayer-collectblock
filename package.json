@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "tsc && require-self",
+    "build": "ts-standard && tsc && require-self",
     "clean": "rm -rf lib",
     "test": "test"
   },
