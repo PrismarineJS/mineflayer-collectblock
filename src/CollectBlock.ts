@@ -135,16 +135,16 @@ function mineBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback
         return
       }
 
-      const index = targets.indexOf(block)
-      if (index >= 0) {
-        targets.splice(index, 1)
-      }
-
       let remainingTicks = 10
       tempEvents.subscribeTo('physicTick', () => {
         remainingTicks--
 
         if (remainingTicks <= 0) {
+          const index = targets.indexOf(block)
+          if (index >= 0) {
+            targets.splice(index, 1)
+          }
+
           tempEvents.cleanup()
           cb()
         }
@@ -189,6 +189,17 @@ function collectItem (bot: Bot, targetEntity: Entity, cb: Callback): void {
 }
 
 /**
+ * A set of options to apply when collecting the given targets.
+ */
+export interface CollectOptions {
+  /**
+   * If true, the target(s) will be appended to the existing target list instead of
+   * starting a new task. Defaults to false.
+   */
+  append?: boolean
+}
+
+/**
  * The collect block plugin.
  */
 export class CollectBlock {
@@ -196,6 +207,11 @@ export class CollectBlock {
      * The bot.
      */
   private readonly bot: Bot
+
+  /**
+   * The list of active targets being collected.
+   */
+  private readonly targets: Collectable[] = []
 
   /**
      * The movements configuration to be sent to the pathfinder plugin.
@@ -252,12 +268,14 @@ export class CollectBlock {
      * all targets in that array sorting dynamically by distance.
      *
      * @param target - The block(s) or item(s) to collect.
+     * @param options - The set of options to use when handling these targets
      * @param cb - The callback that is called finished.
      */
-  collect (target: Collectable | Collectable[], cb: Callback): void {
-    let targetArray
-    if (Array.isArray(target)) targetArray = target
-    else targetArray = [target]
+  collect (target: Collectable | Collectable[], options: CollectOptions | Callback = {}, cb: Callback = () => {}): void {
+    if (typeof options === 'function') {
+      cb = options
+      options = {}
+    }
 
     // @ts-expect-error
     const pathfinder = this.bot.pathfinder
@@ -277,10 +295,60 @@ export class CollectBlock {
       pathfinder.setMovements(this.movements)
     }
 
-    collectAll(this.bot, this.chestLocations, this.itemFilter, targetArray, cb)
+    const beginCollect = (startNew: boolean): void => {
+      if (Array.isArray(target)) this.targets.push(...target)
+      else this.targets.push(target)
+
+      if (startNew) {
+        collectAll(this.bot, this.chestLocations, this.itemFilter, this.targets, (err) => {
+          if (err != null) {
+            // Clear the current task on error, since we can't be sure we cleaned up properly
+            this.targets.length = 0
+          }
+
+          // @ts-expect-error
+          this.bot.emit('collectBlock_finished')
+
+          cb(err)
+        })
+      }
+    }
+
+    const appendMode = options.append == null ? false : options.append
+    if (!appendMode) {
+      this.cancelTask(() => {
+        beginCollect(true)
+      })
+    } else {
+      beginCollect(this.targets.length === 0)
+    }
   }
 
+  /**
+   * Loads all touching blocks of the same type to the given block and returns them as an array.
+   * This effectively acts as a flood fill algorithm to retrieve blocks in the same ore vein and similar.
+   *
+   * @param block - The starting block.
+   * @param maxBlocks - The maximum number of blocks to look for before stopping.
+   * @param maxDistance - The max distance from the starting block to look.
+   * @param floodRadius - The max distance distance from block A to block B to be considered "touching"
+   */
   findFromVein (block: Block, maxBlocks = 100, maxDistance = 16, floodRadius = 1): Block[] {
     return findFromVein(this.bot, block, maxBlocks, maxDistance, floodRadius)
+  }
+
+  /**
+   * Cancels the current collection task, if still active.
+   *
+   * @param cb - The callback to use when the task is stopped.
+   */
+  cancelTask (cb: Callback = () => {}): void {
+    if (this.targets.length === 0) {
+      cb()
+    } else {
+      // @ts-expect-error
+      this.bot.once('collectBlock_finished', cb)
+      this.targets.length = 0
+    }
   }
 }
