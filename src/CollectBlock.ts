@@ -166,6 +166,12 @@ function selectBestTool (bot: Bot, block: Block, cb: () => void): void {
 }
 
 function collectItem (bot: Bot, targetEntity: Entity, cb: Callback): void {
+  // Don't collect any entities that are marked as 'invalid'
+  if (!targetEntity.isValid) {
+    cb()
+    return
+  }
+
   const goal = new goals.GoalFollow(targetEntity, 0)
 
   // @ts-expect-error
