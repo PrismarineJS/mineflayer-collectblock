@@ -295,35 +295,39 @@ export class CollectBlock {
       pathfinder.setMovements(this.movements)
     }
 
-    const beginCollect = () => {
+    const beginCollect = (startNew: boolean): void => {
       if (Array.isArray(target)) this.targets.push(...target)
       else this.targets.push(target)
-  
-      collectAll(this.bot, this.chestLocations, this.itemFilter, this.targets, (err) => {
-        if (err) {
-          // Clear the current task on error, since we can't be sure we cleaned up properly
-          this.targets.length = 0
-        }
-  
-        // @ts-expect-error
-        this.bot.emit('collectBlock_finished')
-        
-        cb(err)
-      })
+
+      if (startNew) {
+        collectAll(this.bot, this.chestLocations, this.itemFilter, this.targets, (err) => {
+          if (err != null) {
+            // Clear the current task on error, since we can't be sure we cleaned up properly
+            this.targets.length = 0
+          }
+
+          // @ts-expect-error
+          this.bot.emit('collectBlock_finished')
+
+          cb(err)
+        })
+      }
     }
 
     const appendMode = options.append == null ? false : options.append
     if (!appendMode) {
-      this.cancelTask(beginCollect)
+      this.cancelTask(() => {
+        beginCollect(true)
+      })
     } else {
-      beginCollect()
+      beginCollect(this.targets.length === 0)
     }
   }
 
   /**
    * Loads all touching blocks of the same type to the given block and returns them as an array.
    * This effectively acts as a flood fill algorithm to retrieve blocks in the same ore vein and similar.
-   * 
+   *
    * @param block - The starting block.
    * @param maxBlocks - The maximum number of blocks to look for before stopping.
    * @param maxDistance - The max distance from the starting block to look.
@@ -335,7 +339,7 @@ export class CollectBlock {
 
   /**
    * Cancels the current collection task, if still active.
-   * 
+   *
    * @param cb - The callback to use when the task is stopped.
    */
   cancelTask (cb: Callback = () => {}): void {
