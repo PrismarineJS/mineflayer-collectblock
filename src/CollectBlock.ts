@@ -35,7 +35,7 @@ function getClosest (bot: Bot, targets: Collectable[]): Collectable | null {
   return closest
 }
 
-function collectAll (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, targets: Collectable[], cb: Callback): void {
+function collectAll (bot: Bot, options: CollectOptionsFull, targets: Collectable[], cb: Callback): void {
   const tempEvents = new TemporarySubscriber(bot)
 
   tempEvents.subscribeTo('entityGone', (entity: Entity) => {
@@ -53,7 +53,7 @@ function collectAll (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, t
     }
 
     if (targets.length > 0) {
-      emptyInventoryIfFull(bot, chestLocations, itemFilter, (err?: Error) => {
+      emptyInventoryIfFull(bot, options.chestLocations, options.itemFilter, (err?: Error) => {
         if (err != null) {
           tempEvents.cleanup()
           cb(err)
@@ -69,9 +69,9 @@ function collectAll (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, t
         }
 
         if (closest.constructor.name === 'Block') {
-          collectBlock(bot, closest as Block, targets, collectNext)
+          collectBlock(bot, closest as Block, options, targets, collectNext)
         } else if (closest.constructor.name === 'Entity') {
-          collectItem(bot, closest as Entity, collectNext)
+          collectItem(bot, closest as Entity, options, collectNext)
         } else {
           cb(error('UnknownType', `Target ${closest.constructor.name} is not a Block or Entity!`))
         }
@@ -84,7 +84,7 @@ function collectAll (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, t
   collectNext()
 }
 
-function collectBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback): void {
+function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, targets: Collectable[], cb: Callback): void {
   // @ts-expect-error
   const pathfinder = bot.pathfinder
 
@@ -103,12 +103,14 @@ function collectBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callb
     cb(error('PathfindingInterrupted', 'Pathfinding interrupted before block reached.'))
   })
 
-  tempEvents.subscribeTo('path_update', (results: Result) => {
-    if (results.status === 'noPath') {
-      tempEvents.cleanup()
-      cb(error('NoPath', 'No path to target block!'))
-    }
-  })
+  if (!options.ignoreNoPath) {
+    tempEvents.subscribeTo('path_update', (results: Result) => {
+      if (results.status === 'noPath') {
+        tempEvents.cleanup()
+        cb(error('NoPath', 'No path to target block!'))
+      }
+    })
+  }
 }
 
 function mineBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback): void {
@@ -165,7 +167,7 @@ function selectBestTool (bot: Bot, block: Block, cb: () => void): void {
   toolPlugin.equipForBlock(block, options, cb)
 }
 
-function collectItem (bot: Bot, targetEntity: Entity, cb: Callback): void {
+function collectItem (bot: Bot, targetEntity: Entity, options: CollectOptionsFull, cb: Callback): void {
   // Don't collect any entities that are marked as 'invalid'
   if (!targetEntity.isValid) {
     cb()
@@ -203,6 +205,38 @@ export interface CollectOptions {
    * starting a new task. Defaults to false.
    */
   append?: boolean
+
+  /**
+   * If true, errors will not be thrown when a path to the target block cannot
+   * be found. The bot will attempt to choose the best available position it
+   * can find, instead. Errors are still thrown if the bot cannot interact with
+   * the block from it's final location. Defaults to false.
+   */
+  ignoreNoPath?: boolean
+
+  /**
+   * Gets the list of chest locations to use when storing items after the bot's
+   * inventory becomes full. If undefined, it defaults to the chest location
+   * list on the bot.collectBlock plugin.
+   */
+  chestLocations?: Vec3[]
+
+  /**
+   * When transferring items to a chest, this filter is used to determine what
+   * items are allowed to be moved, and what items aren't allowed to be moved.
+   * Defaults to the item filter specified on the bot.collectBlock plugin.
+   */
+  itemFilter?: ItemFilter
+}
+
+/**
+ * A version of collect options where all values are assigned.
+ */
+interface CollectOptionsFull {
+  append: boolean
+  ignoreNoPath: boolean
+  chestLocations: Vec3[]
+  itemFilter: ItemFilter
 }
 
 /**
@@ -283,6 +317,13 @@ export class CollectBlock {
       options = {}
     }
 
+    const optionsFull: CollectOptionsFull = {
+      append: options.append ?? false,
+      ignoreNoPath: options.ignoreNoPath ?? false,
+      chestLocations: options.chestLocations ?? this.chestLocations,
+      itemFilter: options.itemFilter ?? this.itemFilter
+    }
+
     // @ts-expect-error
     const pathfinder = this.bot.pathfinder
     if (pathfinder == null) {
@@ -306,7 +347,7 @@ export class CollectBlock {
       else this.targets.push(target)
 
       if (startNew) {
-        collectAll(this.bot, this.chestLocations, this.itemFilter, this.targets, (err) => {
+        collectAll(this.bot, optionsFull, this.targets, (err) => {
           if (err != null) {
             // Clear the current task on error, since we can't be sure we cleaned up properly
             this.targets.length = 0
@@ -320,8 +361,7 @@ export class CollectBlock {
       }
     }
 
-    const appendMode = options.append == null ? false : options.append
-    if (!appendMode) {
+    if (!optionsFull.append) {
       this.cancelTask(() => {
         beginCollect(true)
       })
