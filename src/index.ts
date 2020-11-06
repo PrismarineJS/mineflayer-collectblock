@@ -23,3 +23,5 @@ function loadToolPlugin (bot: Bot): void {
   if (bot.tool != null) return
   bot.loadPlugin(toolPlugin)
 }
+
+export { CollectBlock, Callback, CollectOptions } from './CollectBlock'
