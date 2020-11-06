@@ -19,13 +19,13 @@ export class Targets {
   }
 
   appendTarget (target: Collectable): void {
-    if (this.targets.indexOf(target) >= 0) return
+    if (this.targets.includes(target)) return
     this.targets.push(target)
   }
 
   /**
    * Gets the closest target to the bot in this list.
-   * 
+   *
    * @returns The closest target, or null if there are no targets.
    */
   getClosest (): Collectable | null {
@@ -44,15 +44,15 @@ export class Targets {
     return closest
   }
 
-  get empty(): boolean {
+  get empty (): boolean {
     return this.targets.length === 0
   }
 
-  clear(): void {
+  clear (): void {
     this.targets.length = 0
   }
 
-  removeTarget(target: Collectable): void {
+  removeTarget (target: Collectable): void {
     const index = this.targets.indexOf(target)
     if (index < 0) return
     this.targets.splice(index, 1)
