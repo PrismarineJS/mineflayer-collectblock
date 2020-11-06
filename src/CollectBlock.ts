@@ -7,42 +7,17 @@ import { error } from './Util'
 import { Vec3 } from 'vec3'
 import { emptyInventoryIfFull, ItemFilter } from './Inventory'
 import { findFromVein } from './BlockVeins'
+import { Collectable, Targets } from './Targets'
 import { Item } from 'prismarine-item'
 import mcDataLoader from 'minecraft-data'
 
 export type Callback = (err?: Error) => void
-export type Collectable = Block | Entity
 
-/**
- * Gets the closest position holder from a list.
- *
- * @param bot - The bot to get the position from.
- * @param targets - The list of position holders to sample from.
- */
-function getClosest (bot: Bot, targets: Collectable[]): Collectable | null {
-  let closest: Collectable | null = null
-  let distance: number = 0
-
-  for (const target of targets) {
-    const dist = target.position.distanceTo(bot.entity.position)
-
-    if (closest == null || dist < distance) {
-      closest = target
-      distance = dist
-    }
-  }
-
-  return closest
-}
-
-function collectAll (bot: Bot, options: CollectOptionsFull, targets: Collectable[], cb: Callback): void {
+function collectAll (bot: Bot, options: CollectOptionsFull, cb: Callback): void {
   const tempEvents = new TemporarySubscriber(bot)
 
   tempEvents.subscribeTo('entityGone', (entity: Entity) => {
-    const index = targets.indexOf(entity)
-    if (index >= 0) {
-      targets.splice(index, 1)
-    }
+    options.targets.removeTarget(entity)
   })
 
   const collectNext = (err?: Error): void => {
@@ -52,7 +27,7 @@ function collectAll (bot: Bot, options: CollectOptionsFull, targets: Collectable
       return
     }
 
-    if (targets.length > 0) {
+    if (!options.targets.empty) {
       emptyInventoryIfFull(bot, options.chestLocations, options.itemFilter, (err?: Error) => {
         if (err != null) {
           tempEvents.cleanup()
@@ -60,7 +35,7 @@ function collectAll (bot: Bot, options: CollectOptionsFull, targets: Collectable
           return
         }
 
-        const closest = getClosest(bot, targets)
+        const closest = options.targets.getClosest()
 
         if (closest == null) {
           tempEvents.cleanup()
@@ -69,7 +44,7 @@ function collectAll (bot: Bot, options: CollectOptionsFull, targets: Collectable
         }
 
         if (closest.constructor.name === 'Block') {
-          collectBlock(bot, closest as Block, options, targets, collectNext)
+          collectBlock(bot, closest as Block, options, collectNext)
         } else if (closest.constructor.name === 'Entity') {
           collectItem(bot, closest as Entity, options, collectNext)
         } else {
@@ -84,7 +59,7 @@ function collectAll (bot: Bot, options: CollectOptionsFull, targets: Collectable
   collectNext()
 }
 
-function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, targets: Collectable[], cb: Callback): void {
+function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Callback): void {
   // @ts-expect-error
   const pathfinder = bot.pathfinder
 
@@ -95,7 +70,7 @@ function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, targ
 
   tempEvents.subscribeTo('goal_reached', () => {
     tempEvents.cleanup()
-    mineBlock(bot, block, targets, cb)
+    mineBlock(bot, block, options, cb)
   })
 
   tempEvents.subscribeTo('goal_updated', () => {
@@ -113,7 +88,7 @@ function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, targ
   }
 }
 
-function mineBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback): void {
+function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Callback): void {
   selectBestTool(bot, block, () => {
     // Do nothing if the block is already air
     // Sometimes happens if the block is broken before the bot reaches it
@@ -126,7 +101,7 @@ function mineBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback
 
     tempEvents.subscribeTo('itemDrop', (entity: Entity) => {
       if (entity.position.distanceTo(block.position.offset(0.5, 0.5, 0.5)) <= 0.5) {
-        targets.push(entity)
+        options.targets.appendTarget(entity)
       }
     })
 
@@ -142,11 +117,7 @@ function mineBlock (bot: Bot, block: Block, targets: Collectable[], cb: Callback
         remainingTicks--
 
         if (remainingTicks <= 0) {
-          const index = targets.indexOf(block)
-          if (index >= 0) {
-            targets.splice(index, 1)
-          }
-
+          options.targets.removeTarget(block)
           tempEvents.cleanup()
           cb()
         }
@@ -237,6 +208,7 @@ interface CollectOptionsFull {
   ignoreNoPath: boolean
   chestLocations: Vec3[]
   itemFilter: ItemFilter
+  targets: Targets
 }
 
 /**
@@ -251,7 +223,7 @@ export class CollectBlock {
   /**
    * The list of active targets being collected.
    */
-  private readonly targets: Collectable[] = []
+  private readonly targets: Targets
 
   /**
      * The movements configuration to be sent to the pathfinder plugin.
@@ -294,6 +266,7 @@ export class CollectBlock {
      */
   constructor (bot: Bot) {
     this.bot = bot
+    this.targets = new Targets(bot)
     this.movements = new Movements(bot, mcDataLoader(bot.version))
   }
 
@@ -321,7 +294,8 @@ export class CollectBlock {
       append: options.append ?? false,
       ignoreNoPath: options.ignoreNoPath ?? false,
       chestLocations: options.chestLocations ?? this.chestLocations,
-      itemFilter: options.itemFilter ?? this.itemFilter
+      itemFilter: options.itemFilter ?? this.itemFilter,
+      targets: this.targets
     }
 
     // @ts-expect-error
@@ -343,14 +317,14 @@ export class CollectBlock {
     }
 
     const beginCollect = (startNew: boolean): void => {
-      if (Array.isArray(target)) this.targets.push(...target)
-      else this.targets.push(target)
+      if (Array.isArray(target)) this.targets.appendTargets(target)
+      else this.targets.appendTarget(target)
 
       if (startNew) {
-        collectAll(this.bot, optionsFull, this.targets, (err) => {
+        collectAll(this.bot, optionsFull, (err) => {
           if (err != null) {
             // Clear the current task on error, since we can't be sure we cleaned up properly
-            this.targets.length = 0
+            this.targets.clear()
           }
 
           // @ts-expect-error
@@ -366,7 +340,7 @@ export class CollectBlock {
         beginCollect(true)
       })
     } else {
-      beginCollect(this.targets.length === 0)
+      beginCollect(this.targets.empty)
     }
   }
 
@@ -389,12 +363,11 @@ export class CollectBlock {
    * @param cb - The callback to use when the task is stopped.
    */
   cancelTask (cb: Callback = () => {}): void {
-    if (this.targets.length === 0) {
+    if (this.targets.empty) {
       cb()
     } else {
       // @ts-expect-error
       this.bot.once('collectBlock_finished', cb)
-      this.targets.length = 0
     }
   }
 }
