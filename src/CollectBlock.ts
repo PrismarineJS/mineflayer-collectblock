@@ -44,9 +44,9 @@ function collectAll (bot: Bot, options: CollectOptionsFull, cb: Callback): void 
         }
 
         if (closest.constructor.name === 'Block') {
-          collectBlock(bot, closest as Block, options, collectNext)
+          collectBlock(bot, closest as Block, options, () => setTimeout(collectNext, 0))
         } else if (closest.constructor.name === 'Entity') {
-          collectItem(bot, closest as Entity, options, collectNext)
+          collectItem(bot, closest as Entity, options, () => setTimeout(collectNext, 0))
         } else {
           cb(error('UnknownType', `Target ${closest.constructor.name} is not a Block or Entity!`))
         }
