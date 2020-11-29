@@ -52,6 +52,7 @@ function collectAll (bot: Bot, options: CollectOptionsFull, cb: Callback): void 
         }
       })
     } else {
+      tempEvents.cleanup()
       cb()
     }
   }
