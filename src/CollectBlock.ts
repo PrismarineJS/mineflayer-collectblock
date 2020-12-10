@@ -106,7 +106,7 @@ function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Cal
       }
     })
 
-    bot.dig(block, (err?: Error) => {
+    bot.dig(block, true, (err?: Error) => {
       if (err != null) {
         tempEvents.cleanup()
         cb(err)
