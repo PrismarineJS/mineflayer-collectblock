@@ -4,7 +4,7 @@ import { Vec3 } from 'vec3'
 import { error } from './Util'
 import { Item } from 'prismarine-item'
 import { TaskQueue, TemporarySubscriber } from 'mineflayer-utils'
-import { goals, Result } from 'mineflayer-pathfinder'
+import { goals, ComputedPath } from 'mineflayer-pathfinder'
 
 export type ItemFilter = (item: Item) => boolean
 
@@ -94,7 +94,7 @@ function gotoChest (bot: Bot, location: Vec3, cb: Callback): void {
     cb()
   })
 
-  events.subscribeTo('path_update', (results: Result) => {
+  events.subscribeTo('path_update', (results: ComputedPath) => {
     if (results.status === 'noPath') {
       events.cleanup()
       cb(error('NoPath', 'No path to target block!'))
@@ -118,22 +118,22 @@ function placeItems (bot: Bot, chestPos: Vec3, itemFilter: ItemFilter, cb: (err:
     const chest = bot.openChest(chestBlock)
     let itemsRemain = false
     chest.once('open', () => {
-      const tryDepositItem = (item: Item, cb: Callback): void => {
+      const tryDepositItem = (item: Item, cb2: Callback): void => {
         // @ts-expect-error ; A workaround for checking if the chest is already full
         if (chest.items().length >= chest.window.inventoryStart) {
           // Mark that we have items that didn't fit.
           itemsRemain = true
 
-          cb()
+          cb2()
           return
         }
 
-        chest.deposit(item.type, item.metadata, item.count, cb)
+        chest.deposit(item.type, item.metadata, item.count).then(() => cb2()).catch(err => cb2(err))
       }
 
       const taskQueue = new TaskQueue()
       for (const item of bot.inventory.items()) {
-        if (itemFilter(item)) { taskQueue.add(cb => tryDepositItem(item, cb)) }
+        if (itemFilter(item)) { taskQueue.add(cb3 => tryDepositItem(item, cb3)) }
       }
 
       taskQueue.addSync(() => chest.close())
