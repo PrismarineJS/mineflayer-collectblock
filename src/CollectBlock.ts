@@ -106,13 +106,7 @@ function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Cal
       }
     })
 
-    bot.dig(block, (err?: Error) => {
-      if (err != null) {
-        tempEvents.cleanup()
-        cb(err)
-        return
-      }
-
+    bot.dig(block).then(() => {
       let remainingTicks = 10
       tempEvents.subscribeTo('physicTick', () => {
         remainingTicks--
@@ -123,6 +117,9 @@ function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Cal
           cb()
         }
       })
+    }).catch(err => {
+      tempEvents.cleanup()
+      cb(err)
     })
   })
 }
