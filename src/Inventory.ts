@@ -4,7 +4,7 @@ import { Vec3 } from 'vec3'
 import { error } from './Util'
 import { Item } from 'prismarine-item'
 import { TaskQueue, TemporarySubscriber } from 'mineflayer-utils'
-import { goals, Result } from 'mineflayer-pathfinder'
+import { goals, ComputedPath } from 'mineflayer-pathfinder'
 
 export type ItemFilter = (item: Item) => boolean
 
@@ -94,7 +94,7 @@ function gotoChest (bot: Bot, location: Vec3, cb: Callback): void {
     cb()
   })
 
-  events.subscribeTo('path_update', (results: Result) => {
+  events.subscribeTo('path_update', (results: ComputedPath) => {
     if (results.status === 'noPath') {
       events.cleanup()
       cb(error('NoPath', 'No path to target block!'))
