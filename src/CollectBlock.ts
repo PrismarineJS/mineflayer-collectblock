@@ -1,6 +1,6 @@
 import { Bot } from 'mineflayer'
 import { Block } from 'prismarine-block'
-import { Movements, goals, Result } from 'mineflayer-pathfinder'
+import { Movements, goals, ComputedPath } from 'mineflayer-pathfinder'
 import { TemporarySubscriber } from 'mineflayer-utils'
 import { Entity } from 'prismarine-entity'
 import { error } from './Util'
@@ -80,7 +80,7 @@ function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: 
   })
 
   if (!options.ignoreNoPath) {
-    tempEvents.subscribeTo('path_update', (results: Result) => {
+    tempEvents.subscribeTo('path_update', (results: ComputedPath) => {
       if (results.status === 'noPath') {
         tempEvents.cleanup()
         cb(error('NoPath', 'No path to target block!'))
@@ -106,13 +106,7 @@ function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Cal
       }
     })
 
-    bot.dig(block, (err?: Error) => {
-      if (err != null) {
-        tempEvents.cleanup()
-        cb(err)
-        return
-      }
-
+    bot.dig(block).then(() => {
       let remainingTicks = 10
       tempEvents.subscribeTo('physicTick', () => {
         remainingTicks--
@@ -123,6 +117,9 @@ function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Cal
           cb()
         }
       })
+    }).catch(err => {
+      tempEvents.cleanup()
+      cb(err)
     })
   })
 }
