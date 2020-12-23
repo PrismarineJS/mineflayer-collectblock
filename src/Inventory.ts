@@ -1,10 +1,9 @@
 import { Bot } from 'mineflayer'
 import { Callback } from './CollectBlock'
 import { Vec3 } from 'vec3'
-import { error } from './Util'
 import { Item } from 'prismarine-item'
-import { TaskQueue, TemporarySubscriber } from 'mineflayer-utils'
-import { goals, ComputedPath } from 'mineflayer-pathfinder'
+import { goals } from 'mineflayer-pathfinder'
+import { NoChestsError } from './NoChestsError'
 
 export type ItemFilter = (item: Item) => boolean
 
@@ -38,7 +37,7 @@ export function emptyInventoryIfFull (bot: Bot, chestLocations: Vec3[], itemFilt
 
 export function emptyInventory (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, cb: Callback): void {
   if (chestLocations.length === 0) {
-    cb(error('NoChests', 'There are no defined chest locations!'))
+    cb(new NoChestsError('There are no defined chest locations to empty inventory!'))
     return
   }
 
@@ -49,7 +48,7 @@ export function emptyInventory (bot: Bot, chestLocations: Vec3[], itemFilter: It
     const chest = getClosestChest(bot, chestLocations)
 
     if (chest == null) {
-      cb(error('NoChests', 'All chests are full.'))
+      cb(new NoChestsError('All chests are full!'))
       return
     }
 
@@ -84,33 +83,14 @@ function tryEmptyInventory (bot: Bot, chestLocation: Vec3, itemFilter: ItemFilte
 
 function gotoChest (bot: Bot, location: Vec3, cb: Callback): void {
   // @ts-expect-error
-  const pathfinder = bot.pathfinder
-
-  pathfinder.setGoal(new goals.GoalBlock(location.x, location.y, location.z))
-
-  const events = new TemporarySubscriber(bot)
-  events.subscribeTo('goal_reached', () => {
-    events.cleanup()
-    cb()
-  })
-
-  events.subscribeTo('path_update', (results: ComputedPath) => {
-    if (results.status === 'noPath') {
-      events.cleanup()
-      cb(error('NoPath', 'No path to target block!'))
-    }
-  })
-
-  events.subscribeTo('goal_updated', () => {
-    events.cleanup()
-    cb(error('PathfindingInterrupted', 'Pathfinding interrupted before item could be reached.'))
-  })
+  const pathfinder: Pathfinder = bot.pathfinder
+  pathfinder.goto(new goals.GoalBlock(location.x, location.y, location.z), cb)
 }
 
 function placeItems (bot: Bot, chestPos: Vec3, itemFilter: ItemFilter, cb: (err: Error | undefined, hasRemaining: boolean) => void): void {
   const chestBlock = bot.blockAt(chestPos)
   if (chestBlock == null) {
-    cb(error('UnloadedChunk', 'Chest is in an unloaded chunk!'), true)
+    cb(new Error('Chest is in an unloaded chunk!'), true)
     return
   }
 

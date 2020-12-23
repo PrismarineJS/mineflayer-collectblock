@@ -2,7 +2,6 @@ import { Bot } from 'mineflayer'
 import { Block } from 'prismarine-block'
 import { Movements } from 'mineflayer-pathfinder'
 import { Entity } from 'prismarine-entity'
-import { error } from './Util'
 import { Vec3 } from 'vec3'
 import { emptyInventoryIfFull, ItemFilter } from './Inventory'
 import { findFromVein } from './BlockVeins'
@@ -11,6 +10,8 @@ import { Item } from 'prismarine-item'
 import mcDataLoader from 'minecraft-data'
 import { BlockTarget } from './targets/BlockTarget'
 import { ItemDropTarget } from './targets/ItemDropTarget'
+import { UnresolvedDependencyError } from './UnresolvedDependencyError'
+import { UnknownCollectableError } from './UnknownCollectableError'
 
 export type Callback = (err?: Error) => void
 
@@ -176,14 +177,14 @@ export class CollectBlock {
     // @ts-expect-error
     const pathfinder = this.bot.pathfinder
     if (pathfinder == null) {
-      cb(error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!'))
+      cb(new UnresolvedDependencyError('The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!'))
       return
     }
 
     // @ts-expect-error
     const tool = this.bot.tool
     if (tool == null) {
-      cb(error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-tool plugin to run!'))
+      cb(new UnresolvedDependencyError('The mineflayer-collectblock plugin relies on the mineflayer-tool plugin to run!'))
       return
     }
 
@@ -192,17 +193,11 @@ export class CollectBlock {
     }
 
     const beginCollect = (startNew: boolean): void => {
-      if (Array.isArray(target)) {
-        for (const t of target) {
-          if (t instanceof Block) this.targets.appendTarget(new BlockTarget(this.bot, t, optionsFull))
-          else if (t instanceof Entity) this.targets.appendTarget(new ItemDropTarget(this.bot, t))
-          else throw new Error('Unknown collectable type!')
-        }
-      } else {
-        const t = target
+      if (!Array.isArray(target)) target = [target]
+      for (const t of target) {
         if (t instanceof Block) this.targets.appendTarget(new BlockTarget(this.bot, t, optionsFull))
         else if (t instanceof Entity) this.targets.appendTarget(new ItemDropTarget(this.bot, t))
-        else throw new Error('Unknown collectable type!')
+        else throw new UnknownCollectableError('Unknown collectable type!')
       }
 
       if (startNew) {
