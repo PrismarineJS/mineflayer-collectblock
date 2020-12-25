@@ -2,7 +2,7 @@ import { Bot } from 'mineflayer'
 import { Vec3 } from 'vec3'
 import { Item } from 'prismarine-item'
 import { goals } from 'mineflayer-pathfinder'
-import { NoChestsError } from './NoChestsError'
+import { NoChestsError } from './errors/NoChestsError'
 import { promisify } from 'util'
 import events from 'events'
 
