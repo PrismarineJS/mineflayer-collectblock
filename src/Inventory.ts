@@ -1,11 +1,34 @@
 import { Bot } from 'mineflayer'
-import { Callback } from './CollectBlock'
 import { Vec3 } from 'vec3'
 import { Item } from 'prismarine-item'
 import { goals } from 'mineflayer-pathfinder'
 import { NoChestsError } from './NoChestsError'
+import { promisify } from 'util'
+import events from 'events'
 
 export type ItemFilter = (item: Item) => boolean
+
+export interface InventoryOptions {
+  bot: Bot
+  chestLocations: Vec3[]
+  itemFilter: ItemFilter
+}
+
+export async function emptyInventoryIfFull (options: InventoryOptions): Promise<void> {
+  if (options.bot.inventory.emptySlotCount() > 0) return
+  if (options.chestLocations.length === 0) throw new NoChestsError('There are no defined chest locations to empty inventory!')
+
+  // Shallow clone so we can safely remove chests from the list that are full.
+  const chestLocations = [...options.chestLocations]
+  while (true) {
+    const chestLocation = getClosestChest(options.bot, chestLocations)
+    if (chestLocation == null) {
+      throw new NoChestsError('All chests are full!')
+    }
+
+    if (await tryEmptyInventory(options, chestLocation)) return
+  }
+}
 
 function getClosestChest (bot: Bot, chestLocations: Vec3[]): Vec3 | null {
   let chest = null
@@ -26,109 +49,35 @@ function getClosestChest (bot: Bot, chestLocations: Vec3[]): Vec3 | null {
   return chest
 }
 
-export function emptyInventoryIfFull (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, cb: Callback): void {
-  if (bot.inventory.emptySlotCount() > 0) {
-    cb()
-    return
-  }
-
-  emptyInventory(bot, chestLocations, itemFilter, cb)
-}
-
-export function emptyInventory (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, cb: Callback): void {
-  if (chestLocations.length === 0) {
-    cb(new NoChestsError('There are no defined chest locations to empty inventory!'))
-    return
-  }
-
-  // Shallow clone so we can safely remove chests from the list that are full.
-  chestLocations = [...chestLocations]
-
-  const tryNextChest = (): void => {
-    const chest = getClosestChest(bot, chestLocations)
-
-    if (chest == null) {
-      cb(new NoChestsError('All chests are full!'))
-      return
-    }
-
-    tryEmptyInventory(bot, chest, itemFilter, (err: Error | undefined, hasRemaining: boolean): void => {
-      if (err != null) {
-        cb(err)
-        return
-      }
-
-      if (!hasRemaining) {
-        cb()
-        return
-      }
-
-      tryNextChest()
-    })
-  }
-
-  tryNextChest()
-}
-
-function tryEmptyInventory (bot: Bot, chestLocation: Vec3, itemFilter: ItemFilter, cb: (err: Error | undefined, hasRemaining: boolean) => void): void {
-  gotoChest(bot, chestLocation, (err?: Error) => {
-    if (err != null) {
-      cb(err, true)
-      return
-    }
-
-    placeItems(bot, chestLocation, itemFilter, cb)
-  })
-}
-
-function gotoChest (bot: Bot, location: Vec3, cb: Callback): void {
+async function tryEmptyInventory (options: InventoryOptions, location: Vec3): Promise<boolean> {
   // @ts-expect-error
   const pathfinder: Pathfinder = bot.pathfinder
-  pathfinder.goto(new goals.GoalBlock(location.x, location.y, location.z), cb)
+  const goto = promisify(pathfinder.goto)
+
+  await goto(new goals.GoalBlock(location.x, location.y, location.z))
+  return await placeItems(options, location)
 }
 
-function placeItems (bot: Bot, chestPos: Vec3, itemFilter: ItemFilter, cb: (err: Error | undefined, hasRemaining: boolean) => void): void {
-  const chestBlock = bot.blockAt(chestPos)
-  if (chestBlock == null) {
-    cb(new Error('Chest is in an unloaded chunk!'), true)
-    return
+async function placeItems (options: InventoryOptions, location: Vec3): Promise<boolean> {
+  const chestBlock = options.bot.blockAt(location)
+  if (chestBlock == null) throw new Error('Chest could not be loaded!')
+
+  const chest = options.bot.openChest(chestBlock)
+  await events.once(chest, 'open')
+
+  const window = chest.window
+  if (window == null) throw new Error('Failed to open chest!')
+
+  let hasRemain = false
+  for (const item of options.bot.inventory.items()) {
+    if (!options.itemFilter(item)) continue
+
+    try {
+      await chest.deposit(item.type, item.metadata, item.count)
+    } catch (err) {
+      hasRemain = true
+    }
   }
 
-  try {
-    const chest = bot.openChest(chestBlock)
-    let itemsRemain = false
-    chest.once('open', () => {
-      const tryDepositItem = (item: Item, cb2: Callback): void => {
-        // @ts-expect-error ; A workaround for checking if the chest is already full
-        if (chest.items().length >= chest.window.inventoryStart) {
-          // Mark that we have items that didn't fit.
-          itemsRemain = true
-
-          cb2()
-          return
-        }
-
-        chest.deposit(item.type, item.metadata, item.count).then(() => cb2()).catch(err => cb2(err))
-      }
-
-      const taskQueue = new TaskQueue()
-      for (const item of bot.inventory.items()) {
-        if (itemFilter(item)) { taskQueue.add(cb3 => tryDepositItem(item, cb3)) }
-      }
-
-      taskQueue.addSync(() => chest.close())
-
-      taskQueue.runAll((err?: Error) => {
-        if (err != null) {
-          cb(err, true)
-          return
-        }
-
-        cb(undefined, itemsRemain)
-      })
-    })
-  } catch (err) {
-    // Sometimes open chest will throw a few asserts if block is not a chest
-    cb(err, true)
-  }
+  return hasRemain
 }
