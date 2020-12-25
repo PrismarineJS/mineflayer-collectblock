@@ -2,7 +2,7 @@ import { CollectTarget } from './Targets'
 import { Bot } from 'mineflayer'
 import { Entity } from 'prismarine-entity'
 import { goals } from 'mineflayer-pathfinder'
-import { PathfindingInterruptedError } from '../PathfindingInterupptedError'
+import { PathfindingInterruptedError } from '../errors/PathfindingInterupptedError'
 
 export class ItemDropTarget extends CollectTarget {
   private readonly bot: Bot

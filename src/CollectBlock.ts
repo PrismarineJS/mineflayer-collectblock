@@ -9,7 +9,7 @@ import { Collectable, CollectTarget, Targets } from './targets/Targets'
 import { Item } from 'prismarine-item'
 import { BlockTarget } from './targets/BlockTarget'
 import { ItemDropTarget } from './targets/ItemDropTarget'
-import { UnknownCollectableError } from './UnknownCollectableError'
+import { UnknownCollectableError } from './errors/UnknownCollectableError'
 import events from 'events'
 
 export type Callback = (err?: Error) => void
