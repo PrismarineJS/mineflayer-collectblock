@@ -7,10 +7,8 @@ import { emptyInventoryIfFull, ItemFilter } from './Inventory'
 import { findFromVein } from './BlockVeins'
 import { Collectable, CollectTarget, Targets } from './targets/Targets'
 import { Item } from 'prismarine-item'
-import mcDataLoader from 'minecraft-data'
 import { BlockTarget } from './targets/BlockTarget'
 import { ItemDropTarget } from './targets/ItemDropTarget'
-import { UnresolvedDependencyError } from './UnresolvedDependencyError'
 import { UnknownCollectableError } from './UnknownCollectableError'
 import events from 'events'
 
@@ -69,6 +67,7 @@ export interface CollectOptionsFull {
   chestLocations: Vec3[]
   itemFilter: ItemFilter
   targets: Targets
+  movements?: Movements
 }
 
 /**
@@ -87,6 +86,8 @@ export class CollectBlock {
 
   /**
      * The movements configuration to be sent to the pathfinder plugin.
+     *
+     * @deprecated
      */
   movements?: Movements
 
@@ -127,7 +128,31 @@ export class CollectBlock {
   constructor (bot: Bot) {
     this.bot = bot
     this.targets = new Targets()
-    this.movements = new Movements(bot, mcDataLoader(bot.version))
+  }
+
+  /**
+     * If target is a block:
+     * Causes the bot to break and collect the target block.
+     *
+     * If target is an item drop:
+     * Causes the bot to collect the item drop.
+     *
+     * If target is an array containing items or blocks, preforms the correct action for
+     * all targets in that array sorting dynamically by distance.
+     *
+     * @param target - The block(s) or item(s) to collect.
+     * @param options - The set of options to use when handling these targets
+     * @param cb - The callback.
+     */
+  collect (target: Collectable | Collectable[], options: CollectOptions | Callback = {}, cb: Callback = () => {}): void {
+    if (typeof options === 'function') {
+      cb = options
+      options = {}
+    }
+
+    this.collectAsync(target, options)
+      .then(() => cb())
+      .catch(err => cb(err))
   }
 
   /**
@@ -143,7 +168,7 @@ export class CollectBlock {
      * @param target - The block(s) or item(s) to collect.
      * @param options - The set of options to use when handling these targets
      */
-  async collect (target: Collectable | Collectable[], options: CollectOptions = {}): Promise<void> {
+  async collectAsync (target: Collectable | Collectable[], options: CollectOptions): Promise<void> {
     const optionsFull: CollectOptionsFull = {
       append: options.append ?? false,
       ignoreNoPath: options.ignoreNoPath ?? false,
@@ -152,27 +177,18 @@ export class CollectBlock {
       targets: this.targets
     }
 
-    // @ts-expect-error
-    const pathfinder = this.bot.pathfinder
-    if (pathfinder == null) {
-      throw new UnresolvedDependencyError('The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!')
-    }
-
-    // @ts-expect-error
-    const tool = this.bot.tool
-    if (tool == null) {
-      throw new UnresolvedDependencyError('The mineflayer-collectblock plugin relies on the mineflayer-tool plugin to run!')
-    }
+    if (!Array.isArray(target)) target = [target]
 
     if (!optionsFull.append) {
-      await this.cancelTask()
+      await this.cancelTaskAsync()
     }
 
     if (this.movements != null) {
+    // @ts-expect-error
+      const pathfinder: Pathfinder = this.bot.pathfinder
       pathfinder.setMovements(this.movements)
     }
 
-    if (!Array.isArray(target)) target = [target]
     for (const t of target) {
       if (t instanceof Block) this.targets.appendTarget(new BlockTarget(this.bot, t, optionsFull))
       else if (t instanceof Entity) this.targets.appendTarget(new ItemDropTarget(this.bot, t))
@@ -200,8 +216,18 @@ export class CollectBlock {
 
   /**
    * Cancels the current collection task, if still active.
+     * @param cb - The callback.
    */
-  async cancelTask (): Promise<void> {
+  cancelTask (cb: Callback): void {
+    this.cancelTaskAsync()
+      .then(() => cb())
+      .catch(err => cb(err))
+  }
+
+  /**
+   * Cancels the current collection task, if still active.
+   */
+  async cancelTaskAsync (): Promise<void> {
     if (this.targets.empty) return
 
     this.targets.clear()
