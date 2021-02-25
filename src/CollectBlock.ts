@@ -1,7 +1,7 @@
 import { Bot } from 'mineflayer'
 import { Block } from 'prismarine-block'
 import { Movements, goals, ComputedPath } from 'mineflayer-pathfinder'
-import { TemporarySubscriber } from 'mineflayer-utils'
+import { TemporarySubscriber } from './TemporarySubscriber'
 import { Entity } from 'prismarine-entity'
 import { error } from './Util'
 import { Vec3 } from 'vec3'
