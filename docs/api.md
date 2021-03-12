@@ -1,4 +1,4 @@
-# API <!-- omit in toc -->
+# API <!-- omit in toc --> 
 
 Welcome to the *mineflayer-collectblock* API documentation page.
 
