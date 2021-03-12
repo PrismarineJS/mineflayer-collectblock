@@ -107,17 +107,8 @@ export class CollectBlock {
      * @returns True if the item should be moved into the chest. False otherwise.
      */
   itemFilter: ItemFilter = (item: Item) => {
-    if (item.name.includes('helmet')) return false
-    if (item.name.includes('chestplate')) return false
-    if (item.name.includes('leggings')) return false
-    if (item.name.includes('boots')) return false
-    if (item.name.includes('shield')) return false
-    if (item.name.includes('sword')) return false
-    if (item.name.includes('pickaxe')) return false
-    if (item.name.includes('axe')) return false
-    if (item.name.includes('shovel')) return false
-    if (item.name.includes('hoe')) return false
-    return true
+    const itemNames = ['helmet', 'chestplate', 'leggings', 'boots', 'shield', 'sword', 'pickaxe', 'axe', 'shovel', 'hoe']
+    return itemNames.some(o => item.name.includes(o))
   }
 
   /**
