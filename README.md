@@ -36,7 +36,7 @@ const bot = mineflayer.createBot({ username: "Player" })
 // Load collect block
 bot.loadPlugin(require('mineflayer-collectblock').plugin)
 
-function collectGrass() {
+async function collectGrass() {
   // Find a nearby grass block
   const grass = bot.findBlock({
     matching: require('minecraft-data').blocksByName.grass_block.id,
@@ -45,12 +45,12 @@ function collectGrass() {
 
   if (grass) {
     // If we found one, collect it.
-    bot.collectBlock.collect(grass, err => {
-      if (err) // Handle errors, if any
-        console.log(err)
-      else
-        collectGrass() // Collect another grass block
-    })
+    try {
+      await bot.collectBlock.collectAsync(grass)
+      collectGrass() // Collect another grass block
+    } catch (err) {
+      console.log(err)
+    }
   }
 }
 
