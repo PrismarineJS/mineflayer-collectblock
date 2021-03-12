@@ -22,6 +22,7 @@ export class ItemDropTarget extends CollectTarget {
     // Do nothing if entity is no longer there.
     if (!this.entity.isValid) return
 
+    // @ts-expect-error ; Pathfinder is a plugin
     const pathfinder: Pathfinder = this.bot.pathfinder
 
     const goal = new goals.GoalFollow(this.entity, 0)
@@ -34,6 +35,7 @@ export class ItemDropTarget extends CollectTarget {
       entityGoneListener = (entity: Entity): void => {
         if (entity !== this.entity) return
 
+        // @ts-expect-error ; goal_updated is a pathfinder event
         this.bot.off('goal_updated', goalUpdatedListener)
         this.bot.off('entityGone', entityGoneListener)
 
@@ -43,12 +45,14 @@ export class ItemDropTarget extends CollectTarget {
       goalUpdatedListener = (newGoal: goals.Goal | null): void => {
         if (newGoal === goal) return
 
+        // @ts-expect-error ; goal_updated is a pathfinder event
         this.bot.off('goal_updated', goalUpdatedListener)
         this.bot.off('entityGone', entityGoneListener)
 
         reject(new PathfindingInterruptedError('Pathfinding interrupted before item could be reached.'))
       }
 
+      // @ts-expect-error ; goal_updated is a pathfinder event
       this.bot.on('goal_updated', goalUpdatedListener)
       this.bot.on('entityGone', entityGoneListener)
     })

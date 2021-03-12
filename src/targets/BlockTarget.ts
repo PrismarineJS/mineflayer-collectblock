@@ -29,6 +29,7 @@ export class BlockTarget extends CollectTarget {
     const block = this.bot.blockAt(this.position)
     if (block == null || block.type === 0) return
 
+    // @ts-expect-error ; Pathfinder is a plugin
     const pathfinder: Pathfinder = this.bot.pathfinder
     const goto = promisify(pathfinder.goto)
 
@@ -51,6 +52,7 @@ export class BlockTarget extends CollectTarget {
       maxTools: 2
     }
 
+    // @ts-expect-error
     const toolPlugin: Tool = this.bot.tool
     const equipForBlock = promisify(toolPlugin.equipForBlock)
     await equipForBlock(block, options)
