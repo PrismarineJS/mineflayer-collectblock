@@ -50,7 +50,6 @@ function getClosestChest (bot: Bot, chestLocations: Vec3[]): Vec3 | null {
 }
 
 async function tryEmptyInventory (options: InventoryOptions, location: Vec3): Promise<boolean> {
-  // @ts-expect-error
   const pathfinder: Pathfinder = bot.pathfinder
   const goto = promisify(pathfinder.goto)
 
