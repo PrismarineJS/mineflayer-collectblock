@@ -13,8 +13,8 @@ export function plugin (bot: Bot): void {
 }
 
 function loadPathfinderPlugin (bot: Bot): void {
-  if (bot.pathfinder != null) return
   // @ts-expect-error
+  if (bot.pathfinder != null) return
   bot.loadPlugin(pathfinderPlugin)
 }
 
