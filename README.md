@@ -31,7 +31,11 @@ The brief description goes here.
 ```js
 // Create your bot
 const mineflayer = require("mineflayer")
-const bot = mineflayer.createBot({ username: "Player" })
+const bot = mineflayer.createBot({
+  host: 'localhost
+  username: 'Player',
+})
+let mcData
 
 // Load collect block
 bot.loadPlugin(require('mineflayer-collectblock').plugin)
@@ -39,7 +43,7 @@ bot.loadPlugin(require('mineflayer-collectblock').plugin)
 async function collectGrass() {
   // Find a nearby grass block
   const grass = bot.findBlock({
-    matching: require('minecraft-data').blocksByName.grass_block.id,
+    matching: mcData.blocksByName.grass_block.id,
     maxDistance: 64
   })
 
@@ -55,7 +59,10 @@ async function collectGrass() {
 }
 
 // On spawn, start collecting all nearby grass
-bot.once('spawn', collectGrass)
+bot.once('spawn', () => {
+  mcData = require('minecraft-data')(bot.version)
+  collectGrass()
+})
 ```
 
 ### Documentation

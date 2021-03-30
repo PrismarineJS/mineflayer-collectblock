@@ -1,10 +1,9 @@
 import { Bot } from 'mineflayer'
 import { Vec3 } from 'vec3'
 import { Item } from 'prismarine-item'
-import { goals } from 'mineflayer-pathfinder'
-import { NoChestsError } from './errors/NoChestsError'
-import { promisify } from 'util'
-import events from 'events'
+import { TemporarySubscriber } from './TemporarySubscriber'
+import { TaskQueue } from './TaskQueue'
+import { goals, ComputedPath } from 'mineflayer-pathfinder'
 
 export type ItemFilter = (item: Item) => boolean
 
