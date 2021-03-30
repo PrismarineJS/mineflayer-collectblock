@@ -1,7 +1,6 @@
 import { Bot } from 'mineflayer'
 import { Block } from 'prismarine-block'
-import { Movements, goals, ComputedPath } from 'mineflayer-pathfinder'
-import { TemporarySubscriber } from './TemporarySubscriber'
+import { Movements } from 'mineflayer-pathfinder'
 import { Entity } from 'prismarine-entity'
 import { Vec3 } from 'vec3'
 import { emptyInventoryIfFull, ItemFilter } from './Inventory'
