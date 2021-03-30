@@ -21,6 +21,7 @@ function loadPathfinderPlugin (bot: Bot): void {
 function loadToolPlugin (bot: Bot): void {
   // @ts-expect-error
   if (bot.tool != null) return
+  // @ts-expect-error
   bot.loadPlugin(toolPlugin)
 }
 

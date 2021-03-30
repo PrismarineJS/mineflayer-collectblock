@@ -3,7 +3,8 @@ import { Callback } from './CollectBlock'
 import { Vec3 } from 'vec3'
 import { error } from './Util'
 import { Item } from 'prismarine-item'
-import { TaskQueue, TemporarySubscriber } from 'mineflayer-utils'
+import { TemporarySubscriber } from './TemporarySubscriber'
+import { TaskQueue } from './TaskQueue'
 import { goals, ComputedPath } from 'mineflayer-pathfinder'
 
 export type ItemFilter = (item: Item) => boolean
