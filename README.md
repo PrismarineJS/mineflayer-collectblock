@@ -32,7 +32,7 @@ The brief description goes here.
 // Create your bot
 const mineflayer = require("mineflayer")
 const bot = mineflayer.createBot({
-  host: 'localhost
+  host: 'localhost',
   username: 'Player',
 })
 let mcData
