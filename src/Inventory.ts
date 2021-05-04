@@ -116,12 +116,11 @@ function placeItems (bot: Bot, chestPos: Vec3, itemFilter: ItemFilter, cb: (err:
   }
 
   try {
-    const chest = bot.openChest(chestBlock)
     let itemsRemain = false
-    chest.once('open', () => {
-      const tryDepositItem = (item: Item, cb2: Callback): void => {
+    bot.openChest(chestBlock).then(chest => {
+        const tryDepositItem = (item: Item, cb2: Callback): void => {
         // @ts-expect-error ; A workaround for checking if the chest is already full
-        if (chest.items().length >= chest.window.inventoryStart) {
+        if (chest.items().length >= chest.inventoryStart) {
           // Mark that we have items that didn't fit.
           itemsRemain = true
 
