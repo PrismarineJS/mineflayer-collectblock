@@ -87,7 +87,7 @@ function gotoChest (bot: Bot, location: Vec3, cb: Callback): void {
   // @ts-expect-error
   const pathfinder = bot.pathfinder
 
-  pathfinder.setGoal(new goals.GoalBlock(location.x, location.y, location.z))
+  pathfinder.setGoal(new goals.GoalGetToBlock(location.x, location.y, location.z))
 
   const events = new TemporarySubscriber(bot)
   events.subscribeTo('goal_reached', () => {
