@@ -19,7 +19,7 @@ export class TemporarySubscriber {
     this.subscriptions.push(new Subscription(event, callback))
 
     // @ts-expect-error
-    this.bot.on(event, Function)
+    this.bot.on(event, callback)
   }
 
   /**

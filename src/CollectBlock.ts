@@ -108,7 +108,7 @@ function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Cal
 
     bot.dig(block).then(() => {
       let remainingTicks = 10
-      tempEvents.subscribeTo('physicTick', () => {
+      tempEvents.subscribeTo('physicsTick', () => {
         remainingTicks--
 
         if (remainingTicks <= 0) {
