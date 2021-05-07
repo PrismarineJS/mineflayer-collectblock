@@ -90,7 +90,12 @@ function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: 
 }
 
 function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Callback): void {
-  selectBestTool(bot, block, () => {
+  selectBestTool(bot, block, (err) => {
+    // NOTE: note sure if this error check should come first.
+    if (err != null) {
+      cb(err)
+      return
+    }
     // Do nothing if the block is already air
     // Sometimes happens if the block is broken before the bot reaches it
     if (block.type === 0) {
@@ -124,7 +129,7 @@ function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: Cal
   })
 }
 
-function selectBestTool (bot: Bot, block: Block, cb: () => void): void {
+function selectBestTool (bot: Bot, block: Block, cb: (err?: Error) => void): void {
   const options = {
     requireHarvest: true,
     getFromChest: true,
