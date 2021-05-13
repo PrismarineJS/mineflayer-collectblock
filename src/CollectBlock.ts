@@ -44,9 +44,9 @@ function collectAll (bot: Bot, options: CollectOptionsFull, cb: Callback): void 
         }
 
         if (closest.constructor.name === 'Block') {
-          collectBlock(bot, closest as Block, options, () => setTimeout(collectNext, 0))
+          collectBlock(bot, closest as Block, options, (err) => setTimeout(() => collectNext(err), 0))
         } else if (closest.constructor.name === 'Entity') {
-          collectItem(bot, closest as Entity, options, () => setTimeout(collectNext, 0))
+          collectItem(bot, closest as Entity, options, (err) => setTimeout(() => collectNext(err), 0))
         } else {
           cb(error('UnknownType', `Target ${closest.constructor.name} is not a Block or Entity!`))
         }
@@ -84,6 +84,10 @@ function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb: 
       if (results.status === 'noPath') {
         tempEvents.cleanup()
         cb(error('NoPath', 'No path to target block!'))
+      } else if (results.status === 'timeout') {
+        console.log('timeout')
+        tempEvents.cleanup()
+        cb(error('Timeout', 'Took to long to decide path to goal!'))
       }
     })
   }
