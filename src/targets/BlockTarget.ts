@@ -82,12 +82,12 @@ export class BlockTarget extends CollectTarget {
       const tickListener = (): void => {
         ticksRemaining--
         if (ticksRemaining === 0) {
-          this.bot.removeListener('physicTick', tickListener)
+          this.bot.removeListener('physicsTick', tickListener)
           resolve()
         }
       }
 
-      this.bot.on('physicTick', tickListener)
+      this.bot.on('physicsTick', tickListener)
     })
   }
 }
