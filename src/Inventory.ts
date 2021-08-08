@@ -54,7 +54,7 @@ async function tryEmptyInventory (options: InventoryOptions, location: Vec3): Pr
   const pathfinder: Pathfinder = bot.pathfinder
   const goto = promisify(pathfinder.goto)
 
-  await goto(new goals.GoalBlock(location.x, location.y, location.z))
+  await goto(new goals.GoalGetToBlock(location.x, location.y, location.z))
   return await placeItems(options, location)
 }
 
