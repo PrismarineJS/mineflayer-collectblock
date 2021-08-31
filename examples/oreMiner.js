@@ -26,7 +26,7 @@ bot.once('spawn', () => {
   mcData = require('minecraft-data')(bot.version)
 })
 
-bot.on('chat', (username, message) => {
+bot.on('chat', async (username, message) => {
   const args = message.split(' ')
   if (args[0] !== 'collect') return
 
@@ -47,14 +47,13 @@ bot.on('chat', (username, message) => {
   }
 
   const targets = bot.collectBlock.findFromVein(block)
-  bot.collectBlock.collect(targets, err => {
-    if (err) {
-      // An error occurred, report it.
-      bot.chat(err.message)
-      console.log(err)
-    } else {
-      // All blocks have been collected.
-      bot.chat('Done')
-    }
-  })
+  try {
+    await bot.collectBlock.collect(targets)
+    // All blocks have been collected.
+    bot.chat('Done')
+  } catch (err) {
+    // An error occurred, report it.
+    bot.chat(err.message)
+    console.log(err)
+  }
 })

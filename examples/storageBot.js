@@ -51,7 +51,7 @@ bot.once('spawn', () => {
 })
 
 // Wait for someone to say something
-bot.on('chat', (username, message) => {
+bot.on('chat', async (username, message) => {
   // If the player says something start starts with "collect"
   // Otherwise, do nothing
   const args = message.split(' ')
@@ -95,14 +95,13 @@ bot.on('chat', (username, message) => {
   bot.chat(`Found ${targets.length} ${type}(s)`)
 
   // Tell the bot to collect all of the given blocks in the block list.
-  bot.collectBlock.collect(targets, err => {
-    if (err) {
-      // An error occurred, report it.
-      bot.chat(err.message)
-      console.log(err)
-    } else {
-      // All blocks have been collected.
-      bot.chat('Done')
-    }
-  })
+  try {
+    bot.collectBlock.collect(targets)
+    // All blocks have been collected.
+    bot.chat('Done')
+  } catch (err) {
+    // An error occurred, report it.
+    bot.chat(err.message)
+    console.log(err)
+  }
 })

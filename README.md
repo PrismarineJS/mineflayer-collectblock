@@ -40,7 +40,7 @@ let mcData
 // Load collect block
 bot.loadPlugin(require('mineflayer-collectblock').plugin)
 
-function collectGrass() {
+async function collectGrass() {
   // Find a nearby grass block
   const grass = bot.findBlock({
     matching: mcData.blocksByName.grass_block.id,
@@ -48,13 +48,12 @@ function collectGrass() {
   })
 
   if (grass) {
-    // If we found one, collect it.
-    bot.collectBlock.collect(grass, err => {
-      if (err) // Handle errors, if any
-        console.log(err)
-      else
-        collectGrass() // Collect another grass block
-    })
+    try {
+      await bot.collectBlock.collect(grass) // If we found one, collect it.
+      await collectGrass() // Collect the next piece.
+    } catch(err) {
+      console.log(err) // Handle errors, if any
+    }
   }
 }
 
