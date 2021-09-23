@@ -3,8 +3,6 @@ import { Vec3 } from 'vec3'
 import { Item } from 'prismarine-item'
 import { goals } from 'mineflayer-pathfinder'
 import { NoChestsError } from './errors/NoChestsError'
-import { promisify } from 'util'
-import events from 'events'
 
 export type ItemFilter = (item: Item) => boolean
 
@@ -52,7 +50,7 @@ function getClosestChest (bot: Bot, chestLocations: Vec3[]): Vec3 | null {
 async function tryEmptyInventory (options: InventoryOptions, location: Vec3): Promise<boolean> {
   // @ts-expect-error
   const pathfinder: Pathfinder = bot.pathfinder
-  const goto = promisify(pathfinder.goto)
+  const goto = pathfinder.goto
 
   await goto(new goals.GoalGetToBlock(location.x, location.y, location.z))
   return await placeItems(options, location)
@@ -62,8 +60,7 @@ async function placeItems (options: InventoryOptions, location: Vec3): Promise<b
   const chestBlock = options.bot.blockAt(location)
   if (chestBlock == null) throw new Error('Chest could not be loaded!')
 
-  const chest = options.bot.openChest(chestBlock)
-  await events.once(chest, 'open')
+  const chest = await options.bot.openChest(chestBlock)
 
   const window = chest.window
   if (window == null) throw new Error('Failed to open chest!')
