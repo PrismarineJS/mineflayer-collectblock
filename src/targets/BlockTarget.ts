@@ -29,9 +29,8 @@ export class BlockTarget extends CollectTarget {
     const block = this.bot.blockAt(this.position)
     if (block == null || block.type === 0) return
 
-    // @ts-expect-error ; Pathfinder is a plugin
     const pathfinder: Pathfinder = this.bot.pathfinder
-    const goto = promisify(pathfinder.goto)
+    const goto = pathfinder.goto
 
     // TODO Listen for block breaks while pathfinding
     // Cancel and return instantly if block is invalidated before we reach it
