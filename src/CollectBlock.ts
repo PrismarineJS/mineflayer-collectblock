@@ -31,7 +31,7 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
       }
       case 'Entity': {
         // Don't collect any entities that are marked as 'invalid'
-        if (!closest.isValid) return
+        if (!(closest.isValid as boolean)) return
         await bot.pathfinder.goto(new goals.GoalFollow(closest, 0))
         const tempEvents = new TemporarySubscriber(bot)
         await new Promise(resolve => {
