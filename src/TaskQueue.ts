@@ -33,7 +33,7 @@ export class TaskQueue {
       try {
         task()
         cb()
-      } catch (err) {
+      } catch (err: any) {
         cb(err)
       }
     })
@@ -67,7 +67,7 @@ export class TaskQueue {
 
           runNext()
         })
-      } catch (err) {
+      } catch (err: any) {
         if (cb !== undefined) cb(err)
       }
     }

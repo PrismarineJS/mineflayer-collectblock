@@ -22,23 +22,22 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
     if (closest == null) break
     switch (closest.constructor.name) {
       case 'Block': {
-        const { position } = closest
+        const { position } = closest as Block
         const goal = new goals.GoalGetToBlock(position.x, position.y, position.z)
         await bot.pathfinder.goto(goal)
-        await mineBlock(bot, closest, options)
+        await mineBlock(bot, closest as Block, options)
         // TODO: options.ignoreNoPath
         break
       }
       case 'Entity': {
         // Don't collect any entities that are marked as 'invalid'
-        if (!(closest.isValid as boolean)) return
-        await bot.pathfinder.goto(new goals.GoalFollow(closest, 0))
+        if (!(closest as Entity).isValid) return
+        await bot.pathfinder.goto(new goals.GoalFollow(closest as Entity, 0))
         const tempEvents = new TemporarySubscriber(bot)
-        await new Promise(resolve => {
+        await new Promise<void>(resolve => {
           tempEvents.subscribeTo('entityGone', (entity: Entity) => {
             if (entity === closest) {
               tempEvents.cleanup()
-              // @ts-expect-error
               resolve()
             }
           })
@@ -46,8 +45,7 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
         break
       }
       default: {
-        // @ts-expect-error
-        throw error('UnknownType', `Target ${closest.constructor.name} is not a Block or Entity!`)
+        throw error('UnknownType', `Target ${closest.constructor.name as string} is not a Block or Entity!`)
       }
     }
     options.targets.removeTarget(closest)
@@ -73,7 +71,7 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
   })
   try {
     await bot.dig(block)
-    await new Promise(resolve => {
+    await new Promise<void>(resolve => {
       let remainingTicks = 10
       tempEvents.subscribeTo('physicTick', () => {
         remainingTicks--
@@ -82,7 +80,6 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
           tempEvents.cleanup()
         }
       })
-      // @ts-expect-error
       resolve()
     })
   } finally {
