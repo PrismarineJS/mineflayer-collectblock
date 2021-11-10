@@ -28,13 +28,15 @@ function getClosestChest (bot: Bot, chestLocations: Vec3[]): Vec3 | null {
 }
 
 export async function emptyInventoryIfFull (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, cb?: Callback): Promise<void> {
-  if (cb) return callbackify(emptyInventoryIfFull)(bot, chestLocations)
+  // @ts-expect-error
+  if (cb != null) return callbackify(emptyInventoryIfFull)(bot, chestLocations)
   if (bot.inventory.emptySlotCount() > 0) return
-  return emptyInventory(bot, chestLocations, itemFilter)
+  return await emptyInventory(bot, chestLocations, itemFilter)
 }
 
 export async function emptyInventory (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, cb?: Callback): Promise<void> {
-  if (cb) return callbackify(emptyInventory)(bot, chestLocations)
+  // @ts-expect-error
+  if (cb != null) return callbackify(emptyInventory)(bot, chestLocations)
   if (chestLocations.length === 0) {
     throw error('NoChests', 'There are no defined chest locations!')
   }
@@ -53,19 +55,21 @@ export async function emptyInventory (bot: Bot, chestLocations: Vec3[], itemFilt
 }
 
 async function tryEmptyInventory (bot: Bot, chestLocation: Vec3, itemFilter: ItemFilter, cb?: (err: Error | undefined, hasRemaining: boolean) => void): Promise<boolean> {
-  if (cb) return callbackify(tryEmptyInventory)(bot, chestLocation, itemFilter)
+  // @ts-expect-error
+  if (cb != null) return callbackify(tryEmptyInventory)(bot, chestLocation, itemFilter)
   await gotoChest(bot, chestLocation)
-  return placeItems(bot, chestLocation, itemFilter)
+  return await placeItems(bot, chestLocation, itemFilter)
 }
 
 async function gotoChest (bot: Bot, location: Vec3, cb?: Callback): Promise<void> {
-  if (cb) return callbackify(gotoChest)(bot, location)
   // @ts-expect-error
+  if (cb != null) return callbackify(gotoChest)(bot, location)
   await bot.pathfinder.goto(new goals.GoalGetToBlock(location.x, location.y, location.z))
 }
 
 async function placeItems (bot: Bot, chestPos: Vec3, itemFilter: ItemFilter, cb?: (err: Error | undefined, hasRemaining: boolean) => void): Promise<boolean> {
-  if (cb) return callbackify(placeItems)(bot, chestPos, itemFilter)
+  // @ts-expect-error
+  if (cb != null) return callbackify(placeItems)(bot, chestPos, itemFilter)
   const chestBlock = bot.blockAt(chestPos)
   if (chestBlock == null) {
     throw error('UnloadedChunk', 'Chest is in an unloaded chunk!')
