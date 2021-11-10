@@ -15,9 +15,7 @@ import { callbackify } from 'util'
 
 export type Callback = (err?: Error) => void
 
-async function collectAll (bot: Bot, options: CollectOptionsFull, cb?: Callback): Promise<void> {
-  // @ts-expect-error
-  if (cb != null) return callbackify(collectAll)(bot, options)
+async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void> {
   while (!options.targets.empty) {
     await emptyInventoryIfFull(bot, options.chestLocations, options.itemFilter)
     const closest = options.targets.getClosest()
@@ -41,8 +39,6 @@ async function collectAll (bot: Bot, options: CollectOptionsFull, cb?: Callback)
 }
 
 async function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb?: Callback): Promise<void> {
-  // @ts-expect-error
-  if (cb != null) return callbackify(collectBlock)(bot, block, options)
   const goal = new goals.GoalGetToBlock(block.position.x, block.position.y, block.position.z)
   await bot.pathfinder.goto(goal)
   await mineBlock(bot, block, options)
@@ -55,9 +51,7 @@ const equipToolOptions = {
   maxTools: 2
 }
 
-async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb?: Callback): Promise<void> {
-  // @ts-expect-error
-  if (cb != null) return callbackify(mineBlock)(bot, block, options)
+async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
   // @ts-expect-error
   await bot.tool.equipForBlock(block, equipToolOptions)
   if (block.type === 0) return
@@ -88,8 +82,6 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull, c
 }
 
 async function collectItem (bot: Bot, targetEntity: Entity, options: CollectOptionsFull, cb?: Callback): Promise<void> {
-  // @ts-expect-error
-  if (cb != null) return callbackify(collectItem)(bot, targetEntity, options)
   // Don't collect any entities that are marked as 'invalid'
   if (!targetEntity.isValid) return
   await bot.pathfinder.goto(new goals.GoalFollow(targetEntity, 0))
