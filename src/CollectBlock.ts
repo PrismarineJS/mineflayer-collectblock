@@ -45,7 +45,7 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
         break
       }
       default: {
-        throw error('UnknownType', `Target ${closest.constructor.name as string} is not a Block or Entity!`)
+        throw error('UnknownType', `Target ${closest.constructor.name} is not a Block or Entity!`)
       }
     }
     options.targets.removeTarget(closest)
