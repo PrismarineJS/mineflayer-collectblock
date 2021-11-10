@@ -22,11 +22,27 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
     if (closest == null) break
     switch (closest.constructor.name) {
       case 'Block': {
-        await collectBlock(bot, closest as Block, options)
+        const { position } = closest
+        const goal = new goals.GoalGetToBlock(position.x, position.y, position.z)
+        await bot.pathfinder.goto(goal)
+        await mineBlock(bot, closest, options)
+        // TODO: options.ignoreNoPath
         break
       }
       case 'Entity': {
-        await collectItem(bot, closest as Entity, options)
+        // Don't collect any entities that are marked as 'invalid'
+        if (!closest.isValid) return
+        await bot.pathfinder.goto(new goals.GoalFollow(closest, 0))
+        const tempEvents = new TemporarySubscriber(bot)
+        await new Promise(resolve => {
+          tempEvents.subscribeTo('entityGone', (entity: Entity) => {
+            if (entity === closest) {
+              tempEvents.cleanup()
+              // @ts-expect-error
+              resolve()
+            }
+          })
+        })
         break
       }
       default: {
@@ -36,13 +52,6 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
     }
     options.targets.removeTarget(closest)
   }
-}
-
-async function collectBlock (bot: Bot, block: Block, options: CollectOptionsFull, cb?: Callback): Promise<void> {
-  const goal = new goals.GoalGetToBlock(block.position.x, block.position.y, block.position.z)
-  await bot.pathfinder.goto(goal)
-  await mineBlock(bot, block, options)
-  // TODO: options.ignoreNoPath
 }
 
 const equipToolOptions = {
@@ -79,22 +88,6 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
   } finally {
     tempEvents.cleanup()
   }
-}
-
-async function collectItem (bot: Bot, targetEntity: Entity, options: CollectOptionsFull, cb?: Callback): Promise<void> {
-  // Don't collect any entities that are marked as 'invalid'
-  if (!targetEntity.isValid) return
-  await bot.pathfinder.goto(new goals.GoalFollow(targetEntity, 0))
-  const tempEvents = new TemporarySubscriber(bot)
-  await new Promise(resolve => {
-    tempEvents.subscribeTo('entityGone', (entity: Entity) => {
-      if (entity === targetEntity) {
-        tempEvents.cleanup()
-        // @ts-expect-error
-        resolve()
-      }
-    })
-  })
 }
 
 /**
