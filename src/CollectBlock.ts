@@ -272,7 +272,7 @@ export class CollectBlock {
   async cancelTask (cb?: Callback): Promise<void> {
     if (this.targets.empty) {
       if (cb != null) cb()
-      return Promise.resolve()
+      return await Promise.resolve()
     }
     if (cb != null) {
       // @ts-expect-error
