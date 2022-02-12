@@ -29,14 +29,14 @@ function getClosestChest (bot: Bot, chestLocations: Vec3[]): Vec3 | null {
 
 export async function emptyInventoryIfFull (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, cb?: Callback): Promise<void> {
   // @ts-expect-error
-  if (cb != null) return callbackify(emptyInventoryIfFull)(bot, chestLocations)
+  if (cb != null) return callbackify(emptyInventoryIfFull)(bot, chestLocations, cb)
   if (bot.inventory.emptySlotCount() > 0) return
   return await emptyInventory(bot, chestLocations, itemFilter)
 }
 
 export async function emptyInventory (bot: Bot, chestLocations: Vec3[], itemFilter: ItemFilter, cb?: Callback): Promise<void> {
   // @ts-expect-error
-  if (cb != null) return callbackify(emptyInventory)(bot, chestLocations)
+  if (cb != null) return callbackify(emptyInventory)(bot, chestLocations, cb)
   if (chestLocations.length === 0) {
     throw error('NoChests', 'There are no defined chest locations!')
   }
@@ -56,7 +56,7 @@ export async function emptyInventory (bot: Bot, chestLocations: Vec3[], itemFilt
 
 async function tryEmptyInventory (bot: Bot, chestLocation: Vec3, itemFilter: ItemFilter, cb?: (err: Error | undefined, hasRemaining: boolean) => void): Promise<boolean> {
   // @ts-expect-error
-  if (cb != null) return callbackify(tryEmptyInventory)(bot, chestLocation, itemFilter)
+  if (cb != null) return callbackify(tryEmptyInventory)(bot, chestLocation, itemFilter, cb)
   await gotoChest(bot, chestLocation)
   return await placeItems(bot, chestLocation, itemFilter)
 }
@@ -69,7 +69,7 @@ async function gotoChest (bot: Bot, location: Vec3, cb?: Callback): Promise<void
 
 async function placeItems (bot: Bot, chestPos: Vec3, itemFilter: ItemFilter, cb?: (err: Error | undefined, hasRemaining: boolean) => void): Promise<boolean> {
   // @ts-expect-error
-  if (cb != null) return callbackify(placeItems)(bot, chestPos, itemFilter)
+  if (cb != null) return callbackify(placeItems)(bot, chestPos, itemFilter, cb)
   const chestBlock = bot.blockAt(chestPos)
   if (chestBlock == null) {
     throw error('UnloadedChunk', 'Chest is in an unloaded chunk!')
