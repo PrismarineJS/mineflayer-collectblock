@@ -210,7 +210,7 @@ export class CollectBlock {
       options = {}
     }
     // @ts-expect-error
-    if (cb != null) return callbackify(this.collect)(target, options)
+    if (cb != null) return callbackify(this.collect)(target, options, cb)
 
     const optionsFull: CollectOptionsFull = {
       append: options.append ?? false,
@@ -272,7 +272,7 @@ export class CollectBlock {
   async cancelTask (cb?: Callback): Promise<void> {
     if (this.targets.empty) {
       if (cb != null) cb()
-      return await Promise.resolve()
+      return Promise.resolve()
     }
     if (cb != null) {
       // @ts-expect-error
