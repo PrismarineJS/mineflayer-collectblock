@@ -31,10 +31,10 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
       }
       case 'Entity': {
         // Don't collect any entities that are marked as 'invalid'
-        if (!(closest as Entity).isValid) return
-        await bot.pathfinder.goto(new goals.GoalFollow(closest as Entity, 0))
+        if (!(closest as Entity).isValid) break
+
         const tempEvents = new TemporarySubscriber(bot)
-        await new Promise<void>(resolve => {
+        let waitForPickup = new Promise<void>(resolve => {
           tempEvents.subscribeTo('entityGone', (entity: Entity) => {
             if (entity === closest) {
               tempEvents.cleanup()
@@ -42,6 +42,8 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
             }
           })
         })
+        await bot.pathfinder.goto(new goals.GoalFollow(closest as Entity, 0))
+        await waitForPickup
         break
       }
       default: {
