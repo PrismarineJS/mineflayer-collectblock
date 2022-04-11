@@ -6,7 +6,7 @@ export type Collectable = Block | Entity
 
 export class Targets {
   private readonly bot: Bot
-  private readonly targets: Collectable[] = []
+  private targets: Collectable[] = []
 
   constructor (bot: Bot) {
     this.bot = bot
