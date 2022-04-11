@@ -34,7 +34,7 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
         if (!(closest as Entity).isValid) break
 
         const tempEvents = new TemporarySubscriber(bot)
-        let waitForPickup = new Promise<void>(resolve => {
+        const waitForPickup = new Promise<void>(resolve => {
           tempEvents.subscribeTo('entityGone', (entity: Entity) => {
             if (entity === closest) {
               tempEvents.cleanup()
@@ -61,7 +61,7 @@ const equipToolOptions = {
 }
 
 async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
-  if (bot.blockAt(block.position)!=block) {
+  if (bot.blockAt(block.position) !== block) {
     options.targets.removeTarget(block)
     return
   }
@@ -84,7 +84,7 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
   })
   try {
     await bot.dig(block)
-    //Waiting for items to drop
+    // Waiting for items to drop
     await new Promise<void>(resolve => {
       let remainingTicks = 10
       tempEvents.subscribeTo('physicTick', () => {
