@@ -90,7 +90,6 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
       tempEvents.subscribeTo('physicTick', () => {
         remainingTicks--
         if (remainingTicks <= 0) {
-          options.targets.removeTarget(block)
           tempEvents.cleanup()
         }
       })
