@@ -91,9 +91,9 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
         remainingTicks--
         if (remainingTicks <= 0) {
           tempEvents.cleanup()
+          resolve()
         }
       })
-      resolve()
     })
   } finally {
     tempEvents.cleanup()
