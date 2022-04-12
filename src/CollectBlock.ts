@@ -257,7 +257,9 @@ export class CollectBlock {
       await collectAll(this.bot, optionsFull)
     } catch (err) {
       this.targets.clear()
-      throw err
+      // Ignore path stopped error for cancelTask to work properly (imo we shouldn't throw any pathing errors)
+      // @ts-expect-error
+      if (err.name !== 'PathStopped') throw err
     } finally {
       // @ts-expect-error
       this.bot.emit('collectBlock_finished')
@@ -287,6 +289,7 @@ export class CollectBlock {
       if (cb != null) cb()
       return await Promise.resolve()
     }
+    this.bot.pathfinder.stop()
     if (cb != null) {
       // @ts-expect-error
       this.bot.once('collectBlock_finished', cb)
