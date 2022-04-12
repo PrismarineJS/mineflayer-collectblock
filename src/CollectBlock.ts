@@ -61,7 +61,7 @@ const equipToolOptions = {
 }
 
 async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
-  if (bot.blockAt(block.position) !== block) {
+  if (bot.blockAt(block.position)?.type !== block.type) {
     options.targets.removeTarget(block)
     return
   }
