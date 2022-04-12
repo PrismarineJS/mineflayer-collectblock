@@ -61,20 +61,20 @@ const equipToolOptions = {
 }
 
 async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
-  if (bot.blockAt(block.position)?.type !== block.type) {
-    options.targets.removeTarget(block)
-    return
-  }
-
   // @ts-expect-error
-  if (!bot.pathfinder.movements.safeToBreak(block)) {
+  if (bot.blockAt(block.position)?.type !== block.type || bot.blockAt(block.position)?.type===0 || !bot.pathfinder.movements.safeToBreak(block)) {
     options.targets.removeTarget(block)
     return
   }
 
   // @ts-expect-error
   await bot.tool.equipForBlock(block, equipToolOptions)
-  if (block.type === 0) return
+
+  // @ts-expect-error
+  if (block.canHarvest(bot.heldItem)){
+    options.targets.removeTarget(block)
+    return
+  }
 
   const tempEvents = new TemporarySubscriber(bot)
   tempEvents.subscribeTo('itemDrop', (entity: Entity) => {
