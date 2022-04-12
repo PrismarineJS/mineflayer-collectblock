@@ -22,8 +22,7 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
     if (closest == null) break
     switch (closest.constructor.name) {
       case 'Block': {
-        const { position } = closest as Block
-        const goal = new goals.GoalGetToBlock(position.x, position.y, position.z)
+        const goal = new goals.GoalLookAtBlock(closest.position, bot.world)
         await bot.pathfinder.goto(goal)
         await mineBlock(bot, closest as Block, options)
         // TODO: options.ignoreNoPath
@@ -61,7 +60,7 @@ const equipToolOptions = {
 }
 
 async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
-  if (bot.blockAt(block.position) !== block) {
+  if (bot.blockAt(block.position)?.type !== block.type) {
     options.targets.removeTarget(block)
     return
   }
