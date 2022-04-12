@@ -61,6 +61,17 @@ const equipToolOptions = {
 }
 
 async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
+  if (bot.blockAt(block.position) !== block) {
+    options.targets.removeTarget(block)
+    return
+  }
+
+  // @ts-expect-error
+  if (!bot.pathfinder.movements.safeToBreak(block)) {
+    options.targets.removeTarget(block)
+    return
+  }
+
   // @ts-expect-error
   if (bot.blockAt(block.position)?.type !== block.type || bot.blockAt(block.position)?.type === 0 || !bot.pathfinder.movements.safeToBreak(block)) {
     options.targets.removeTarget(block)
