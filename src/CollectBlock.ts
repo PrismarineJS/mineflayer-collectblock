@@ -31,10 +31,10 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
       }
       case 'Entity': {
         // Don't collect any entities that are marked as 'invalid'
-        if (!(closest as Entity).isValid) return
-        await bot.pathfinder.goto(new goals.GoalFollow(closest as Entity, 0))
+        if (!(closest as Entity).isValid) break
+
         const tempEvents = new TemporarySubscriber(bot)
-        await new Promise<void>(resolve => {
+        const waitForPickup = new Promise<void>(resolve => {
           tempEvents.subscribeTo('entityGone', (entity: Entity) => {
             if (entity === closest) {
               tempEvents.cleanup()
@@ -42,6 +42,8 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
             }
           })
         })
+        await bot.pathfinder.goto(new goals.GoalFollow(closest as Entity, 0))
+        await waitForPickup
         break
       }
       default: {
@@ -59,6 +61,17 @@ const equipToolOptions = {
 }
 
 async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
+  if (bot.blockAt(block.position) !== block) {
+    options.targets.removeTarget(block)
+    return
+  }
+
+  // @ts-expect-error
+  if (!bot.pathfinder.movements.safeToBreak(block)) {
+    options.targets.removeTarget(block)
+    return
+  }
+
   // @ts-expect-error
   await bot.tool.equipForBlock(block, equipToolOptions)
   if (block.type === 0) return
@@ -71,16 +84,16 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
   })
   try {
     await bot.dig(block)
+    // Waiting for items to drop
     await new Promise<void>(resolve => {
       let remainingTicks = 10
       tempEvents.subscribeTo('physicTick', () => {
         remainingTicks--
         if (remainingTicks <= 0) {
-          options.targets.removeTarget(block)
           tempEvents.cleanup()
+          resolve()
         }
       })
-      resolve()
     })
   } finally {
     tempEvents.cleanup()
