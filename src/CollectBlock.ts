@@ -62,7 +62,7 @@ const equipToolOptions = {
 
 async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
   // @ts-expect-error
-  if (bot.blockAt(block.position)?.type !== block.type || bot.blockAt(block.position)?.type===0 || !bot.pathfinder.movements.safeToBreak(block)) {
+  if (bot.blockAt(block.position)?.type !== block.type || bot.blockAt(block.position)?.type === 0 || !bot.pathfinder.movements.safeToBreak(block)) {
     options.targets.removeTarget(block)
     return
   }
@@ -71,7 +71,7 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
   await bot.tool.equipForBlock(block, equipToolOptions)
 
   // @ts-expect-error
-  if (block.canHarvest(bot.heldItem)){
+  if (block.canHarvest(bot.heldItem)) {
     options.targets.removeTarget(block)
     return
   }
