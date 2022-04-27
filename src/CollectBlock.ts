@@ -71,7 +71,7 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
   await bot.tool.equipForBlock(block, equipToolOptions)
 
   // @ts-expect-error
-  if (block.canHarvest(bot.heldItem)) {
+  if (!block.canHarvest(bot.heldItem)) {
     options.targets.removeTarget(block)
     return
   }
