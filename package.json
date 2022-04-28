@@ -29,7 +29,7 @@
   "homepage": "https://github.com/TheDudeFromCI/mineflayer-collectblock#readme",
   "dependencies": {
     "mineflayer": "^4.0.0",
-    "mineflayer-pathfinder": "^2.0.0",
+    "mineflayer-pathfinder": "^2.1.0",
     "mineflayer-tool": "^1.1.0"
   },
   "devDependencies": {
