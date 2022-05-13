@@ -66,7 +66,6 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
     return
   }
 
-  // @ts-expect-error
   await bot.tool.equipForBlock(block, equipToolOptions)
 
   // @ts-expect-error
@@ -236,7 +235,6 @@ export class CollectBlock {
       throw error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!')
     }
 
-    // @ts-expect-error
     if (this.bot.tool == null) {
       throw error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-tool plugin to run!')
     }
