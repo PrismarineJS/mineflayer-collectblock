@@ -60,20 +60,20 @@ const equipToolOptions = {
 }
 
 async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): Promise<void> {
-  if (bot.blockAt(block.position)?.type !== block.type) {
-    options.targets.removeTarget(block)
-    return
-  }
-
   // @ts-expect-error
-  if (!bot.pathfinder.movements.safeToBreak(block)) {
+  if (bot.blockAt(block.position)?.type !== block.type || bot.blockAt(block.position)?.type === 0 || !bot.pathfinder.movements.safeToBreak(block)) {
     options.targets.removeTarget(block)
     return
   }
 
   // @ts-expect-error
   await bot.tool.equipForBlock(block, equipToolOptions)
-  if (block.type === 0) return
+
+  // @ts-expect-error
+  if (!block.canHarvest(bot.heldItem)) {
+    options.targets.removeTarget(block)
+    return
+  }
 
   const tempEvents = new TemporarySubscriber(bot)
   tempEvents.subscribeTo('itemDrop', (entity: Entity) => {
@@ -256,7 +256,9 @@ export class CollectBlock {
       await collectAll(this.bot, optionsFull)
     } catch (err) {
       this.targets.clear()
-      throw err
+      // Ignore path stopped error for cancelTask to work properly (imo we shouldn't throw any pathing errors)
+      // @ts-expect-error
+      if (err.name !== 'PathStopped') throw err
     } finally {
       // @ts-expect-error
       this.bot.emit('collectBlock_finished')
@@ -286,6 +288,7 @@ export class CollectBlock {
       if (cb != null) cb()
       return await Promise.resolve()
     }
+    this.bot.pathfinder.stop()
     if (cb != null) {
       // @ts-expect-error
       this.bot.once('collectBlock_finished', cb)
