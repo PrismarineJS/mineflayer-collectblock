@@ -22,8 +22,7 @@ async function collectAll (bot: Bot, options: CollectOptionsFull): Promise<void>
     if (closest == null) break
     switch (closest.constructor.name) {
       case 'Block': {
-        const { position } = closest as Block
-        const goal = new goals.GoalGetToBlock(position.x, position.y, position.z)
+        const goal = new goals.GoalLookAtBlock(closest.position, bot.world)
         await bot.pathfinder.goto(goal)
         await mineBlock(bot, closest as Block, options)
         // TODO: options.ignoreNoPath
@@ -67,7 +66,6 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
     return
   }
 
-  // @ts-expect-error
   await bot.tool.equipForBlock(block, equipToolOptions)
 
   // @ts-expect-error
@@ -237,7 +235,6 @@ export class CollectBlock {
       throw error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-pathfinder plugin to run!')
     }
 
-    // @ts-expect-error
     if (this.bot.tool == null) {
       throw error('UnresolvedDependency', 'The mineflayer-collectblock plugin relies on the mineflayer-tool plugin to run!')
     }
