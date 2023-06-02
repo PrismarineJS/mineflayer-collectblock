@@ -5,7 +5,7 @@ import { plugin as toolPlugin } from 'mineflayer-tool'
 
 declare module 'mineflayer' {
   interface Bot {
-    collectBlock: CollectBlock;
+    collectBlock: CollectBlock
   }
 }
 
