@@ -9,7 +9,6 @@ import { emptyInventoryIfFull, ItemFilter } from './Inventory'
 import { findFromVein } from './BlockVeins'
 import { Collectable, Targets } from './Targets'
 import { Item } from 'prismarine-item'
-import mcDataLoader from 'minecraft-data'
 import { once } from 'events'
 import { callbackify } from 'util'
 
@@ -85,7 +84,7 @@ async function mineBlock (bot: Bot, block: Block, options: CollectOptionsFull): 
     // Waiting for items to drop
     await new Promise<void>(resolve => {
       let remainingTicks = 10
-      tempEvents.subscribeTo('physicTick', () => {
+      tempEvents.subscribeTo('physicsTick', () => {
         remainingTicks--
         if (remainingTicks <= 0) {
           tempEvents.cleanup()
@@ -198,7 +197,7 @@ export class CollectBlock {
   constructor (bot: Bot) {
     this.bot = bot
     this.targets = new Targets(bot)
-    this.movements = new Movements(bot, mcDataLoader(bot.version))
+    this.movements = new Movements(bot)
   }
 
   /**

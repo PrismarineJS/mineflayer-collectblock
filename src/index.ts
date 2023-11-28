@@ -3,8 +3,13 @@ import { CollectBlock } from './CollectBlock'
 import { pathfinder as pathfinderPlugin } from 'mineflayer-pathfinder'
 import { plugin as toolPlugin } from 'mineflayer-tool'
 
+declare module 'mineflayer' {
+  interface Bot {
+    collectBlock: CollectBlock
+  }
+}
+
 export function plugin (bot: Bot): void {
-  // @ts-expect-error
   bot.collectBlock = new CollectBlock(bot)
 
   // Load plugins if not loaded manually.
