@@ -67,8 +67,7 @@ async function mineBlock(bot: Bot, block: Block, options: CollectOptionsFull): P
 
 	await bot.tool.equipForBlock(block, equipToolOptions);
 
-	// @ts-expect-error
-	if (!block.canHarvest(typeof bot.heldItem !== "undefined" || bot.heldItem ? bot.heldItem.type : bot.heldItem)) {
+	if (!block.canHarvest(bot.heldItem ? bot.heldItem.type : bot.heldItem)) {
 		options.targets.removeTarget(block);
 		return;
 	}
