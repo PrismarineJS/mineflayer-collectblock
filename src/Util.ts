@@ -6,8 +6,8 @@
  *
  * @returns The error object.
  */
-export function error (type: string, message: string): Error {
-  const e = new Error(message)
-  e.name = type
-  return e
+export function error(type: string, message: string): Error {
+	const e = new Error(message);
+	e.name = type;
+	return e;
 }
