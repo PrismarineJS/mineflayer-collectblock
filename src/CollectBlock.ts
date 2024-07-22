@@ -67,9 +67,9 @@ async function mineBlock(bot: Bot, block: Block, options: CollectOptionsFull): P
 
 	await bot.tool.equipForBlock(block, equipToolOptions);
 
-	if (!block.canHarvest(bot.heldItem ? bot.heldItem.type : bot.heldItem)) {
-		options.targets.removeTarget(block);
-		return;
+	if (bot.heldItem !== null && !block.canHarvest(bot.heldItem.type)) {
+		options.targets.removeTarget(block)
+		return
 	}
 
 	const tempEvents = new TemporarySubscriber(bot);
