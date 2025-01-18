@@ -238,8 +238,8 @@ export class CollectBlock {
     }
 
     if (this.movements != null) {
-      this.movements.dontMineUnderFallingBlock = false;
-      this.movements.dontCreateFlow = false;
+      this.movements.dontMineUnderFallingBlock = false
+      this.movements.dontCreateFlow = false
       this.bot.pathfinder.setMovements(this.movements)
     }
 
