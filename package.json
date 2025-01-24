@@ -1,6 +1,6 @@
 {
   "name": "mineflayer-collectblock",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "A simple utility plugin for Mineflayer that add a higher level API for collecting blocks.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
