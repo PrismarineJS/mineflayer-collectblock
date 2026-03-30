@@ -1,4 +1,8 @@
 ### 1.6.0
+
+### 1.7.0
+* [Update CI to Node 24 (#142)](https://github.com/PrismarineJS/mineflayer-collectblock/commit/be0cddb0786dd85d062ea5bd22dac4752ddfb012) (thanks @rom1504)
+
 * [Update CollectBlock.ts (#140)](https://github.com/PrismarineJS/mineflayer-collectblock/commit/4c929e3114440604f7dbbb72200261ab1547a437) (thanks @luiscosio)
 * [Remove history from README.md](https://github.com/PrismarineJS/mineflayer-collectblock/commit/456026e56abfb92581c93f8d9e7245bd5f7cb96f) (thanks @rom1504)
 * [Create HISTORY.md](https://github.com/PrismarineJS/mineflayer-collectblock/commit/536585dff674760a5ffc0b06d1f174e207f7255c) (thanks @rom1504)
