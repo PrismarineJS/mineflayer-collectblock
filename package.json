@@ -7,7 +7,7 @@
   "scripts": {
     "build": "ts-standard && tsc && require-self",
     "clean": "rm -rf lib",
-    "test": "test"
+    "test": "npm run build && node --test"
   },
   "repository": {
     "type": "git",
