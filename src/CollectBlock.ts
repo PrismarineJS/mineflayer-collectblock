@@ -219,7 +219,7 @@ export class CollectBlock {
       options = {}
     }
     // @ts-expect-error
-    if (cb != null) return callbackify(this.collect)(target, options, cb)
+    if (cb != null) return callbackify(this.collect.bind(this))(target, options, cb)
 
     const optionsFull: CollectOptionsFull = {
       append: options.append ?? false,
